@@ -104,6 +104,17 @@ impl LlmClient {
         self.chat_with_retry(system_prompt, user_message, history, true, budget).await
     }
 
+    /// 长输出普通对话(Markdown 口述稿之类)。
+    pub async fn chat_long(
+        &self,
+        system_prompt: &str,
+        user_message: &str,
+        history: &[ChatMessage],
+    ) -> AppResult<String> {
+        let budget = CallBudget::long_for(&self.cfg);
+        self.chat_with_retry(system_prompt, user_message, history, false, budget).await
+    }
+
     /// 流式对话:每收到一段增量就回调一次,最后返回完整文本。
     pub async fn chat_stream<F>(
         &self,

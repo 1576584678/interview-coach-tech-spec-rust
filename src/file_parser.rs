@@ -292,16 +292,26 @@ fn read_u32(bytes: &[u8], at: usize) -> Result<u32, String> {
 /// 首选 pdf-extract:它会按「字体」解析 ToUnicode CMap、CID 编码与各类字体编码。
 /// 中文简历 PDF 几乎都是嵌入子集字体,多个字体的码位会互相覆盖,自己按全局
 /// CMap 猜会解出「韩文谚文 + 全角字母」这种伪字符,所以这里不再自己猜。
+///
+/// 必须**按页**提取:pdf-extract 的 Processor 里有一张「资源名 → 字体」的缓存表,
+/// 而这张表贯穿整个文档。Word/WPS/LaTeX 导出的中文 PDF 经常每页都复用 `/f0`、`/f1`
+/// 这类短名字,却指向不同的子集字体——第 3 页的 `/f0` 会命中第 1 页 `/f0` 的编码表,
+/// 于是整页解出「看着像中文」的乱码(真实案例:简历后 1/3 全是这种字)。
+/// 按页提取时每页都会新建 Processor,字体表不会串。
 /// pdf-extract 失败(非标准 PDF、缺 xref 等)时退回自研的简单内容流解析。
 fn pdf_text(bytes: &[u8]) -> AppResult<String> {
     let primary = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-        pdf_extract::extract_text_from_mem(bytes)
+        pdf_extract::extract_text_from_mem_by_pages(bytes)
     }))
     .ok()
     .and_then(Result::ok);
-    if let Some(text) = primary {
-        if text.trim().chars().count() >= 20 {
-            return Ok(glue_spaced_ascii(&text));
+    if let Some(pages) = primary {
+        // 任何一页解出伪字符就整体不采信,退回自研解析
+        if !pages.is_empty() && !pages.iter().any(|page| looks_like_cid_garbage(page)) {
+            let text = pages.join("\n");
+            if text.trim().chars().count() >= 20 {
+                return Ok(glue_spaced_ascii(&text));
+            }
         }
     }
     let fallback = pdf_text_fallback(bytes);

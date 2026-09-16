@@ -40,7 +40,9 @@ pub async fn diagnose(
     let user_prompt = prompt::render(prompt_name::RESUME_DIAGNOSIS, &vars)?;
 
     let llm = state.llm()?;
-    let raw = llm.chat_json(JSON_SYSTEM_PROMPT, &user_prompt, &[]).await?;
+    // 诊断要把「全部问题 + 每条怎么改」写成 JSON,输出可达数千 tokens,
+    // 用默认的 2000 上限会被截断,所以走长输出预算。
+    let raw = llm.chat_json_long(JSON_SYSTEM_PROMPT, &user_prompt, &[]).await?;
     let value = crate::llm::extract_json(&raw)?;
     let mut diagnosis: ResumeDiagnosis = serde_json::from_value(value)
         .map_err(|e| AppError::internal(format!("简历诊断 JSON 结构不合法: {e}")))?;
@@ -143,7 +145,7 @@ pub async fn star(
     let user_prompt = prompt::render(prompt_name::STAR_PROJECT, &vars)?;
 
     let llm = state.llm()?;
-    llm.chat("你是一位资深技术面试教练,请按要求输出 Markdown。", &user_prompt, &[])
+    llm.chat_long("你是一位资深技术面试教练,请按要求输出 Markdown。", &user_prompt, &[])
         .await
         .map(|text| text.trim().to_string())
 }

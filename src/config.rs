@@ -68,8 +68,8 @@ impl Default for LlmConfig {
             api_key: String::new(),
             model: "deepseek-chat".to_string(),
             temperature: 0.7,
-            max_tokens: 2000,
-            timeout_seconds: 90,
+            max_tokens: 8000,
+            timeout_seconds: 240,
         }
     }
 }

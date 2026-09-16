@@ -218,7 +218,7 @@ pub async fn improvement_plan(state: &SharedState, force: bool) -> AppResult<Imp
 
     let llm = state.llm()?;
     let raw = llm
-        .chat_json("你是一位资深面试教练,请严格按照要求返回 JSON。", &user_prompt, &[])
+        .chat_json_long("你是一位资深面试教练,请严格按照要求返回 JSON。", &user_prompt, &[])
         .await?;
     let value = crate::llm::extract_json(&raw)?;
     let mut plan: ImprovementPlan = serde_json::from_value(value)

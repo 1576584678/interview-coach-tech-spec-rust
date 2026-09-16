@@ -1,6 +1,6 @@
 [package]
 name = "interview-coach"
-version = "0.1.2"
+version = "0.1.3"
 edition = "2021"
 description = "面试教练 - 单机版(Rust 实现, 无用户体系, 接入可配置大模型)"
 
