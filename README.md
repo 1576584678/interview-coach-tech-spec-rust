@@ -81,12 +81,40 @@ cargo build --release               # 产出 target/release/interview-coach.exe(
 
 命令行参数:`--host` `--port` `--config` `--data-dir` `--web-dir` `--no-browser`。
 
+## 分发 / 便携包
+
+对方机器**不需要装 Rust**,便携包里已经带上了 exe、前端和启动脚本。依赖只有 Windows 自带的系统 DLL,
+不需要 Node / MySQL / Redis / VC++ 运行库;题库、薪资基准、Prompt 模板都用 `include_str!` 编进了二进制。
+
+```powershell
+pwsh -File tools\make-dist.ps1                                    # 用 bin\interview-coach.exe 打包
+pwsh -File tools\make-dist.ps1 -ExePath target\debug\interview-coach.exe
+pwsh -File tools\make-dist.ps1 -NoZip                             # 只生成目录
+```
+
+产物:
+
+- `dist\面试教练-便携版-win64\` —— exe + `web\` + `启动面试教练.cmd` + `使用说明.txt`
+- `dist\面试教练-便携版-win64.zip` —— 约 34 MB(debug exe 压缩后),可直接发给别人
+
+对方解压后双击 `启动面试教练.cmd` 即可,`config.toml` 与 `data\` 会在运行时自动生成。
+
+注意:
+
+- 只拷 exe 不拷 `web\` 会白屏,两者必须在同一层。
+- exe 没有代码签名:目标机器若开了**智能应用控制**同样会被拦(见常见问题 1);
+  首次运行可能弹 SmartScreen,需要点「更多信息 → 仍要运行」;杀软也可能误报,需加白名单。
+- 只支持 64 位 Windows 10/11(本机为 `x86_64-pc-windows-gnu` 构建)。
+
 ## 目录结构
 
 ```
 面试教练-rust版/
 ├── 启动面试教练.cmd           # 双击启动(debug 版)
-├── bin/interview-coach.exe     # 已编译好的 debug 可执行文件
+├── bin/interview-coach.exe     # 已编译好的 debug 可执行文件(被 .gitignore 忽略)
+├── tools/make-dist.ps1         # 组装便携包(目录 + zip)
+├── tools/usage.txt             # 便携包里的「使用说明.txt」正文
+├── dist/                       # 便携包产物(exe + web + 启动脚本 + 说明,被忽略)
 ├── Cargo.toml
 ├── config.toml                 # 运行后生成:大模型/服务配置(可直接编辑)
 ├── data/interview-coach.json   # 运行后生成:全部本地数据(备份就拷这个文件)
