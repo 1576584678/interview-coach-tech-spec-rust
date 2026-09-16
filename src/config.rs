@@ -83,7 +83,8 @@ impl LlmConfig {
         }
         if base.ends_with("/chat/completions") {
             base.to_string()
-        } else if base.ends_with("/v1") {
+        } else if base.ends_with("/v1") || base.ends_with("/v4") {
+            // 智谱等厂商用 /v4/chat/completions,OpenAI 兼容用 /v1
             format!("{base}/chat/completions")
         } else {
             format!("{base}/v1/chat/completions")

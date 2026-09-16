@@ -6,7 +6,7 @@
 
 use std::io::Read;
 
-use encoding_rs::GB18030;
+use encoding_rs::{BIG5, GB18030};
 
 use crate::error::{code, AppError, AppResult};
 use crate::llm::abbreviate;
@@ -83,26 +83,57 @@ fn decode_text(bytes: &[u8]) -> String {
     if let Ok(text) = std::str::from_utf8(bytes) {
         return text.to_string();
     }
-    // 3. 中文 Windows 上记事本/Word 导出的 txt 常见 GBK/GB2312,用 GB18030(超集)解。
-    let (text, _, had_errors) = GB18030.decode(bytes);
-    if !had_errors && !looks_garbled(&text) {
-        return text.into_owned();
+    // 3. 简体中文 Windows 上记事本/Word 导出的 txt 常见 GBK/GB2312(GB18030 是其超集),
+    //    繁体常见 Big5。两种都解一遍,按「常见汉字命中数」挑更像正常中文的那个:
+    //    用错编码时解出来的是一堆生僻字,命中数会明显偏低。
+    let mut best: Option<(usize, String)> = None;
+    for encoding in [GB18030, BIG5] {
+        let (text, _, had_errors) = encoding.decode(bytes);
+        if had_errors {
+            continue;
+        }
+        let text = text.into_owned();
+        let score = common_chinese_hits(&text);
+        if best.as_ref().is_none_or(|(best_score, _)| score > *best_score) {
+            best = Some((score, text));
+        }
+    }
+    if let Some((_, text)) = best {
+        if !looks_garbled(&text) {
+            return text;
+        }
     }
     // 4. 都不像,退回 UTF-8 宽松解码(保留替换字符,便于上层提示用户)。
     String::from_utf8_lossy(bytes).to_string()
 }
 
-/// 判断解码结果是否大面积异常(替换字符或控制字符过多),用于放弃错误编码的猜测。
+/// 统计文本里常见简/繁汉字的出现次数。用错编码时几乎命中不到,用于挑选正确的编码。
+fn common_chinese_hits(text: &str) -> usize {
+    const COMMON: &str = "的一是不了在人有我他这个们中来上大为和国地到以说时要就出会可也你对生能而子那得于着下自之年过发后作里用道行所然家种事成方多经么去法学如都同现当没动面起看定天分还进好小部其些主样理心她本前开但因只从想实日军者意无力它与长把机十民第公此已工使情明性知全這個們來為國說時會對於著過發後裡種經麼學現當沒動還進開從實與長機點業外將兩高間由問很最重並物手應戰向頭文體政美見被利等產或新己制身果加西斯月話合回特代內信表化老給世位次度門任常先海通教兒原東聲提立及比員解水名真論處走義各入幾口認條平系氣題活爾更別打女變四神總何電數安少報才結反受目太量再感建務做接必場件計管期市直德資命山金指克許統區保至隊形社便空決治展馬科司五基眼書非則聽白卻界達光放強即像難且權思王象完設式色路記南品住告類求據程北邊死張該交規萬取拉格望覺術領共確傳師觀清今切院讓識候帶導爭運笑飛風步改收根干造言聯持組每濟車親極林服快辦議往元英士證近失轉夫令準布始怎呢存未遠叫台單影具羅字愛擊流備兵連調深商算質團集百需價花黨華城石級整府離況亞請技際約示復病息究線似官火斷精滿支視消越器容照須九增研寫稱企八功嗎包片史委乎查輕易早曾除農找裝廣顯吧阿李標談吃圖念六引歷首醫局突專費號盡另周較註語僅考落青隨選列武紅響雖推勢參希古眾構房半節土投某案黑維革劃敵致陳律足態護七興派孩驗責營星夠章音跟志底站嚴巴例防族供效續施留講型料終答緊黃絕奇察母京段依批群項故按河米圍江織害鬥雙境客紀採舉殺攻父蘇密低朝友訴止細願千值仍男錢破網熱助倒育屬坐帝限船臉職速刻樂否剛威毛狀率甚獨球般普怕彈校苦創假久錯承印晚蘭試股拿腦預誰益陽若哪微尼繼送急血驚傷素藥適波夜省初喜衛源食險待述陸習置居勞財環排福納歡雷警獲模充負雲停木遊龍樹疑層冷洲沖射略範竟句室異激漢村哈策演簡卡罪判擔州靜退既衣您宗積餘痛檢差富靈協角佔配徵修皮揮勝降階審沉堅善媽劉讀啊超免壓銀買皇養伊懷執副亂抗犯追幫宣佛歲航優怪香著田鐵控稅左右份穿藝背陣草腳概惡塊頓敢守酒島托央戶烈洋哥索胡款靠評版寶座釋景顧弟登貨互付伯慢歐換聞危忙核暗姐介壞討麗良序升監臨亮露永呼味野架域沙掉括艦魚雜誤灣吉減編楚肯測敗屋跑夢散溫困劍漸封救貴槍缺樓縣尚毫移娘朋畫班智亦耳恩短掌恐遺固席";
+    text.chars().filter(|c| COMMON.contains(*c)).count()
+}
+
+/// 判断解码结果是否大面积异常(替换字符、控制字符、韩文谚文、私用区),用于放弃错误编码的猜测。
 fn looks_garbled(text: &str) -> bool {
-    let total = text.chars().count();
+    let total = text.chars().filter(|c| !c.is_whitespace()).count();
     if total == 0 {
         return false;
     }
-    let bad = text
-        .chars()
-        .filter(|c| *c == '\u{fffd}' || (c.is_control() && !matches!(c, '\n' | '\r' | '\t')))
-        .count();
-    bad * 10 > total
+    suspicion_score(text) * 20 > total
+}
+
+/// 可疑字符数(替换字符、控制字符、韩文谚文、私用区)。解码方式错了就会大量出现。
+fn suspicion_score(text: &str) -> usize {
+    text.chars()
+        .filter(|c| {
+            let code = *c as u32;
+            *c == '\u{fffd}'
+                || (c.is_control() && !matches!(c, '\n' | '\r' | '\t'))
+                || (0x1100..=0x11ff).contains(&code)
+                || (0xac00..=0xd7af).contains(&code)
+                || (0xe000..=0xf8ff).contains(&code)
+        })
+        .count()
 }
 
 fn looks_binary(bytes: &[u8]) -> bool {
@@ -150,6 +181,7 @@ fn truncate_chars(text: &str, max: usize) -> String {
 }
 
 fn strip_html(html: &str) -> String {
+    let html = &strip_script_style(html);
     let mut out = String::with_capacity(html.len());
     let mut in_tag = false;
     let mut chars = html.chars().peekable();
@@ -171,13 +203,83 @@ fn strip_html(html: &str) -> String {
     decode_entities(&out)
 }
 
+/// 去掉 script / style 块(它们不是正文,粘进 HTML 会把代码和样式混进简历)。
+fn strip_script_style(html: &str) -> String {
+    /// ASCII 大小写不敏感查找;needle 都是 ASCII,按字节比较不会切坏 UTF-8。
+    fn find_ci(haystack: &str, needle: &str, from: usize) -> Option<usize> {
+        let bytes = haystack.as_bytes();
+        let needle = needle.as_bytes();
+        if needle.is_empty() || bytes.len() < needle.len() {
+            return None;
+        }
+        (from..=bytes.len() - needle.len()).find(|i| bytes[*i..*i + needle.len()].eq_ignore_ascii_case(needle))
+    }
+
+    let mut out = String::with_capacity(html.len());
+    let mut cursor = 0usize;
+    while cursor < html.len() {
+        let script = find_ci(html, "<script", cursor);
+        let style = find_ci(html, "<style", cursor);
+        let Some(start) = script.into_iter().chain(style).min() else { break };
+        out.push_str(&html[cursor..start]);
+        let closing = if script == Some(start) { "</script" } else { "</style" };
+        cursor = match find_ci(html, closing, start) {
+            Some(end) => html[end..].find('>').map(|i| end + i + 1).unwrap_or(html.len()),
+            None => html.len(),
+        };
+    }
+    out.push_str(&html[cursor..]);
+    out
+}
+
 fn decode_entities(text: &str) -> String {
-    text.replace("&nbsp;", " ")
-        .replace("&amp;", "&")
-        .replace("&lt;", "<")
-        .replace("&gt;", ">")
-        .replace("&quot;", "\"")
-        .replace("&#39;", "'")
+    if !text.contains('&') {
+        return text.to_string();
+    }
+    let mut out = String::with_capacity(text.len());
+    let mut rest = text;
+    while let Some(idx) = rest.find('&') {
+        out.push_str(&rest[..idx]);
+        let tail = &rest[idx..];
+        // 实体名最长十几个字符,找不到分号就当成普通 & 处理
+        let end = tail
+            .char_indices()
+            .take(16)
+            .find(|(_, c)| *c == ';')
+            .map(|(i, _)| i);
+        let decoded = end.and_then(|end| decode_entity(&tail[1..end]));
+        match (decoded, end) {
+            (Some(ch), Some(end)) => {
+                out.push(ch);
+                rest = &tail[end + 1..];
+            }
+            _ => {
+                out.push('&');
+                rest = &rest[idx + 1..];
+            }
+        }
+    }
+    out.push_str(rest);
+    out
+}
+
+/// 解析单个实体体(不含 & 和 ;),支持命名实体与 &#1234; / &#x4E2D; 数字实体。
+fn decode_entity(entity: &str) -> Option<char> {
+    match entity {
+        "nbsp" => return Some(' '),
+        "amp" => return Some('&'),
+        "lt" => return Some('<'),
+        "gt" => return Some('>'),
+        "quot" => return Some('"'),
+        "apos" => return Some('\''),
+        _ => {}
+    }
+    let numeric = entity.strip_prefix('#')?;
+    let code = match numeric.strip_prefix(['x', 'X']) {
+        Some(hex) => u32::from_str_radix(hex, 16).ok()?,
+        None => numeric.parse::<u32>().ok()?,
+    };
+    char::from_u32(code)
 }
 
 // ============================ DOCX ============================
@@ -307,7 +409,7 @@ fn pdf_text(bytes: &[u8]) -> AppResult<String> {
     .and_then(Result::ok);
     if let Some(pages) = primary {
         // 任何一页解出伪字符就整体不采信,退回自研解析
-        if !pages.is_empty() && !pages.iter().any(|page| looks_like_cid_garbage(page)) {
+        if !pages.is_empty() && !pages.iter().any(|page| looks_garbled(page)) {
             let text = pages.join("\n");
             if text.trim().chars().count() >= 20 {
                 return Ok(glue_spaced_ascii(&text));
@@ -316,7 +418,7 @@ fn pdf_text(bytes: &[u8]) -> AppResult<String> {
     }
     let fallback = pdf_text_fallback(bytes);
     match fallback {
-        Ok(text) if !looks_like_cid_garbage(&text) => Ok(glue_spaced_ascii(&text)),
+        Ok(text) if !looks_garbled(&text) => Ok(glue_spaced_ascii(&text)),
         _ => Err(AppError::business(
             code::FILE_PARSE_FAILED,
             "PDF 中的文字是嵌入字体且没有可用的编码表,无法可靠还原为文字。请直接粘贴简历文本,或用 Word/WPS 另存为 .docx 后上传",
@@ -385,26 +487,6 @@ fn has_text_operator(stream: &[u8]) -> bool {
         haystack.windows(needle.len()).any(|w| w == needle)
     }
     contains(stream, b"Tj") || contains(stream, b"TJ") || contains(stream, b"Td") || contains(stream, b"BT")
-}
-
-/// 识别「嵌入子集字体 + ToUnicode 不全」时解出的伪字符:韩文谚文、私用区、替换字符。
-/// 这类字符在简历里几乎不可能出现,比例一高就说明解码方式错了。
-fn looks_like_cid_garbage(text: &str) -> bool {
-    let mut total = 0usize;
-    let mut bad = 0usize;
-    for ch in text.chars() {
-        if ch.is_whitespace() {
-            continue;
-        }
-        total += 1;
-        let code = ch as u32;
-        let hangul = (0x1100..=0x11FF).contains(&code) || (0xAC00..=0xD7AF).contains(&code);
-        let private_use = (0xE000..=0xF8FF).contains(&code);
-        if hangul || private_use || ch == '\u{fffd}' {
-            bad += 1;
-        }
-    }
-    total > 0 && bad * 20 > total
 }
 
 /// 取出所有已解压的内容流(FlateDecode 会被解开,其他编码原样使用)。
@@ -816,6 +898,44 @@ mod tests {
         assert!(text.contains("订单系统重构"));
     }
 
+    /// 繁体 Big5 文件不能按 GBK 硬解,否则会全是生僻字。
+    #[test]
+    fn big5_text_is_decoded() {
+        let content = "台北市內湖區的軟體工程師,熟悉 Java 與資料庫,有五年開發經驗,負責過訂單系統重構。";
+        let (big5, _, errors) = BIG5.encode(content);
+        assert!(!errors, "用例内容应能用 Big5 编码");
+        let text = extract("resume.txt", &big5).expect("Big5 解析失败");
+        assert!(text.contains("軟體工程師"), "解析结果: {text}");
+        assert!(text.contains("資料庫"), "解析结果: {text}");
+    }
+
+    /// script/style 不是正文,不能混进简历文本。
+    #[test]
+    fn html_script_and_style_are_dropped() {
+        let html = "<html><head><style>body{color:red}</style><script>var x=1;</script></head>\
+                    <body><h1>张三</h1><p>Java 后端开发,5 年经验,熟悉订单系统与高并发场景</p></body></html>";
+        let text = extract("resume.html", html.as_bytes()).expect("html 解析失败");
+        assert!(text.contains("Java 后端开发"), "解析结果: {text}");
+        assert!(!text.contains("var x"), "script 未剔除: {text}");
+        assert!(!text.contains("color:red"), "style 未剔除: {text}");
+    }
+
+    /// docx 里的数字实体与换行标签要正确处理。
+    #[test]
+    fn docx_entities_and_breaks_are_handled() {
+        let xml = r#"<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>
+<w:p><w:r><w:t>张三 &#183; Java 后端开发</w:t></w:r></w:p>
+<w:tbl><w:tr><w:tc><w:p><w:r><w:t>订单系统重</w:t><w:br/><w:t>构,耗时 800ms 降到 200ms</w:t></w:r></w:p></w:tc></w:tr></w:tbl>
+</w:body></w:document>"#;
+        let bytes = build_zip(&[("word/document.xml", xml.as_bytes(), true)]);
+        let text = extract("简历.docx", &bytes).expect("docx 解析失败");
+        assert!(text.contains("张三 · Java 后端开发"), "解析结果: {text}");
+        assert!(text.contains("订单系统重"), "解析结果: {text}");
+        assert!(text.contains("200ms"), "解析结果: {text}");
+        assert!(!text.contains("&#183;"), "数字实体未解码: {text}");
+    }
+
     #[test]
     fn legacy_doc_gets_clear_hint() {
         let err = extract("resume.doc", b"some legacy binary content here").unwrap_err();
@@ -878,9 +998,9 @@ mod tests {
     #[test]
     fn cid_garbage_is_detected() {
         let garbled = "촀촐前端建设发规范\n촠E\nS\nl\ni\nn\nt\n겮\n촑l\ni\nn";
-        assert!(looks_like_cid_garbage(garbled), "应识别为伪字符");
-        assert!(!looks_like_cid_garbage("张三 · Java 后端开发,5 年经验,负责订单系统重构"));
-        assert!(!looks_like_cid_garbage(""));
+        assert!(looks_garbled(garbled), "应识别为伪字符");
+        assert!(!looks_garbled("张三 · Java 后端开发,5 年经验,负责订单系统重构"));
+        assert!(!looks_garbled(""));
     }
 
     /// 逐字母定位的 PDF 会解出 "E S l i n t",这里把它们粘回单词。

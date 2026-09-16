@@ -337,6 +337,12 @@ impl LlmClient {
             "stream": stream,
             "messages": messages,
         });
+        // deepseek-v4 系列默认会先输出一大段思考内容,思考也占 max_tokens,
+        // 长 JSON 会被思考挤掉导致截断。简历场景不需要思考,显式关掉。
+        let model = self.cfg.model.trim();
+        if model.starts_with("deepseek-v4") || model == "deepseek-flash" {
+            body["reasoning_effort"] = json!("none");
+        }
         if json_mode {
             body["response_format"] = json!({ "type": "json_object" });
         }
@@ -442,5 +448,29 @@ mod tests {
         assert_eq!(cfg.chat_completions_url(), "https://api.deepseek.com/v1/chat/completions");
         cfg.base_url = "http://localhost:11434/v1/chat/completions".into();
         assert_eq!(cfg.chat_completions_url(), "http://localhost:11434/v1/chat/completions");
+        // 智谱等用 /v4
+        cfg.base_url = "https://open.bigmodel.cn/api/paas/v4".into();
+        assert_eq!(cfg.chat_completions_url(), "https://open.bigmodel.cn/api/paas/v4/chat/completions");
+    }
+
+    fn client_with_model(model: &str) -> LlmClient {
+        let cfg = LlmConfig {
+            base_url: "https://api.deepseek.com".into(),
+            api_key: "test-key".into(),
+            model: model.into(),
+            ..Default::default()
+        };
+        LlmClient::new(cfg).expect("构造客户端失败")
+    }
+
+    /// deepseek-v4 系列会默认先输出思考,思考占 max_tokens,长 JSON 会被挤掉。
+    #[test]
+    fn v4_model_disables_reasoning() {
+        let body = client_with_model("deepseek-v4.1-flash").build_body("sys", "user", &[], true, false, 8000);
+        assert_eq!(body["reasoning_effort"], "none");
+        assert_eq!(body["response_format"]["type"], "json_object");
+
+        let body = client_with_model("deepseek-chat").build_body("sys", "user", &[], false, false, 2000);
+        assert!(body.get("reasoning_effort").is_none(), "普通模型不应带 reasoning_effort: {body}");
     }
 }
