@@ -754,7 +754,13 @@
           if (!llmReady()) return;
           const button = $('#opt-btn');
           button.disabled = true;
-          button.textContent = '优化中(约 30-90 秒)…';
+          // 长输出任务通常要 1-3 分钟,加个计时,免得看起来像卡死
+          let waited = 0;
+          button.textContent = '优化中…(通常 1-3 分钟)';
+          const timer = setInterval(() => {
+            waited += 5;
+            button.textContent = `优化中…(已等待 ${waited} 秒)`;
+          }, 5000);
           try {
             await Api.resumeOptimize(currentId, {
               targetPosition: $('#r-position').value.trim(),
@@ -765,6 +771,7 @@
             await loadList();
             render();
           } catch (err) { fail(err); button.disabled = false; button.textContent = 'AI 优化'; }
+          finally { clearInterval(timer); }
         };
         $('#del-resume').onclick = () => confirmDialog('删除这份简历?', '删除后无法恢复。', async () => {
           try {

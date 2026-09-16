@@ -12,6 +12,41 @@ use crate::models::ChatMessage;
 /// 重试退避(毫秒),仅对 5xx / 超时 / 网络抖动重试。
 const BACKOFF_MS: [u64; 2] = [3000, 8000];
 
+/// 长输出任务(整份简历改写、面试复盘报告等)的最小预算。
+/// 默认配置(2000 tokens / 90 秒)只够短回答:长 JSON 会被截断,或未生成完就超时。
+const LONG_MIN_MAX_TOKENS: u32 = 8000;
+const LONG_MIN_TIMEOUT_SECS: u64 = 240;
+
+/// 单次调用的预算:token 上限、超时时间、重试次数。
+struct CallBudget {
+    max_tokens: u32,
+    timeout: Duration,
+    retries: usize,
+    retry_on_timeout: bool,
+}
+
+impl CallBudget {
+    fn from_config(cfg: &LlmConfig) -> Self {
+        Self {
+            max_tokens: cfg.max_tokens,
+            timeout: Duration::from_secs(cfg.timeout_seconds),
+            retries: BACKOFF_MS.len(),
+            retry_on_timeout: true,
+        }
+    }
+
+    /// 长输出任务:token 与超时都取「配置值」和「最小要求」里更大的那个,
+    /// 但超时不重试——同一份大 prompt 重发一次大概率还是超时。
+    fn long_for(cfg: &LlmConfig) -> Self {
+        Self {
+            max_tokens: cfg.max_tokens.max(LONG_MIN_MAX_TOKENS),
+            timeout: Duration::from_secs(cfg.timeout_seconds.max(LONG_MIN_TIMEOUT_SECS)),
+            retries: 1,
+            retry_on_timeout: false,
+        }
+    }
+}
+
 pub struct LlmClient {
     http: reqwest::Client,
     cfg: LlmConfig,
@@ -42,7 +77,8 @@ impl LlmClient {
         user_message: &str,
         history: &[ChatMessage],
     ) -> AppResult<String> {
-        self.chat_with_retry(system_prompt, user_message, history, false).await
+        self.chat_with_retry(system_prompt, user_message, history, false, CallBudget::from_config(&self.cfg))
+            .await
     }
 
     /// JSON 模式对话(要求响应为 JSON 对象)。
@@ -52,7 +88,20 @@ impl LlmClient {
         user_message: &str,
         history: &[ChatMessage],
     ) -> AppResult<String> {
-        self.chat_with_retry(system_prompt, user_message, history, true).await
+        self.chat_with_retry(system_prompt, user_message, history, true, CallBudget::from_config(&self.cfg))
+            .await
+    }
+
+    /// 长输出 JSON 对话:自动抬高 token 与超时预算,超时也不再重试
+    /// (同一份大 prompt 重发一次大概率还是超时,只会让用户多等几分钟)。
+    pub async fn chat_json_long(
+        &self,
+        system_prompt: &str,
+        user_message: &str,
+        history: &[ChatMessage],
+    ) -> AppResult<String> {
+        let budget = CallBudget::long_for(&self.cfg);
+        self.chat_with_retry(system_prompt, user_message, history, true, budget).await
     }
 
     /// 流式对话:每收到一段增量就回调一次,最后返回完整文本。
@@ -83,15 +132,19 @@ impl LlmClient {
         user_message: &str,
         history: &[ChatMessage],
         json_mode: bool,
+        budget: CallBudget,
     ) -> AppResult<String> {
         let mut attempt = 0usize;
         loop {
-            match self.chat_once(system_prompt, user_message, history, json_mode).await {
+            match self
+                .chat_once(system_prompt, user_message, history, json_mode, &budget)
+                .await
+            {
                 Ok(text) => return Ok(text),
                 Err(err) => {
-                    let retryable = matches!(err.code(), code::LLM_TIMEOUT)
+                    let retryable = (matches!(err.code(), code::LLM_TIMEOUT) && budget.retry_on_timeout)
                         || (err.code() == code::LLM_FAILED && is_retryable(&err.message()));
-                    if attempt < BACKOFF_MS.len() && retryable {
+                    if attempt < budget.retries && attempt < BACKOFF_MS.len() && retryable {
                         let wait = BACKOFF_MS[attempt];
                         tracing::warn!("大模型调用失败(第 {} 次),{}ms 后重试: {}", attempt + 1, wait, err.message());
                         tokio::time::sleep(Duration::from_millis(wait)).await;
@@ -110,16 +163,17 @@ impl LlmClient {
         user_message: &str,
         history: &[ChatMessage],
         json_mode: bool,
+        budget: &CallBudget,
     ) -> AppResult<String> {
         let url = self.chat_completions_url()?;
-        let body = self.build_body(system_prompt, user_message, history, json_mode, false);
+        let body = self.build_body(system_prompt, user_message, history, json_mode, false, budget.max_tokens);
         let response = self
             .http
             .post(&url)
             .header("Authorization", format!("Bearer {}", self.cfg.api_key.trim()))
             .header("Content-Type", "application/json")
             .json(&body)
-            .timeout(Duration::from_secs(self.cfg.timeout_seconds))
+            .timeout(budget.timeout)
             .send()
             .await
             .map_err(map_reqwest_error)?;
@@ -140,14 +194,27 @@ impl LlmClient {
                 format!("大模型返回错误: {}", abbreviate(&err.to_string(), 300)),
             ));
         }
-        let content = payload
-            .get("choices")
-            .and_then(|c| c.get(0))
+        let choice = payload.get("choices").and_then(|c| c.get(0));
+        let finish_reason = choice
+            .and_then(|c| c.get("finish_reason"))
+            .and_then(|v| v.as_str())
+            .unwrap_or_default();
+        let content = choice
             .and_then(|c| c.get("message"))
             .and_then(|m| m.get("content"))
             .and_then(|c| c.as_str())
             .unwrap_or_default()
             .to_string();
+        // JSON 模式下被截断一定是坏结果,直接给出可操作的提示
+        if json_mode && finish_reason == "length" {
+            return Err(AppError::business(
+                code::LLM_FAILED,
+                format!(
+                    "大模型输出被截断(已达 {} tokens 上限):请在「设置」里把 max_tokens 调大后重试",
+                    budget.max_tokens
+                ),
+            ));
+        }
         if content.trim().is_empty() {
             return Err(AppError::business(code::LLM_EMPTY, "大模型返回内容为空,请重试"));
         }
@@ -165,7 +232,7 @@ impl LlmClient {
         F: FnMut(&str) + Send,
     {
         let url = self.chat_completions_url()?;
-        let body = self.build_body(system_prompt, user_message, history, false, true);
+        let body = self.build_body(system_prompt, user_message, history, false, true, self.cfg.max_tokens);
         let response = self
             .http
             .post(&url)
@@ -238,6 +305,7 @@ impl LlmClient {
         history: &[ChatMessage],
         json_mode: bool,
         stream: bool,
+        max_tokens: u32,
     ) -> Value {
         let mut messages: Vec<Value> = Vec::with_capacity(history.len() + 2);
         if !system_prompt.trim().is_empty() {
@@ -254,7 +322,7 @@ impl LlmClient {
         let mut body = json!({
             "model": self.cfg.model.trim(),
             "temperature": self.cfg.temperature,
-            "max_tokens": self.cfg.max_tokens,
+            "max_tokens": max_tokens,
             "stream": stream,
             "messages": messages,
         });
@@ -336,6 +404,23 @@ mod tests {
     fn extracts_json_with_surrounding_text() {
         let raw = "这是结果: {\"score\": 88} 请查收";
         assert_eq!(extract_json(raw).unwrap()["score"], 88);
+    }
+
+    #[test]
+    fn long_call_raises_small_budget() {
+        let cfg = LlmConfig { max_tokens: 2000, timeout_seconds: 90, ..Default::default() };
+        let budget = CallBudget::long_for(&cfg);
+        assert_eq!(budget.max_tokens, 8000, "默认 2000 tokens 装不下整份简历,应抬到 8000");
+        assert_eq!(budget.timeout, Duration::from_secs(240));
+        assert!(!budget.retry_on_timeout, "长任务超时不应反复重试");
+    }
+
+    #[test]
+    fn long_call_keeps_larger_budget() {
+        let cfg = LlmConfig { max_tokens: 16000, timeout_seconds: 600, ..Default::default() };
+        let budget = CallBudget::long_for(&cfg);
+        assert_eq!(budget.max_tokens, 16000);
+        assert_eq!(budget.timeout, Duration::from_secs(600));
     }
 
     #[test]

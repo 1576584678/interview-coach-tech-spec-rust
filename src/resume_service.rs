@@ -85,7 +85,8 @@ pub async fn optimize(
     let user_prompt = prompt::render(prompt_name::RESUME_OPTIMIZER, &vars)?;
 
     let llm = state.llm()?;
-    let raw = llm.chat_json(JSON_SYSTEM_PROMPT, &user_prompt, &[]).await?;
+    // 优化要输出「整份改好的简历 + 全部字段」,属于长输出,用更高的 token/超时预算
+    let raw = llm.chat_json_long(JSON_SYSTEM_PROMPT, &user_prompt, &[]).await?;
     let value = crate::llm::extract_json(&raw)?;
     let mut optimization: ResumeOptimization = serde_json::from_value(value)
         .map_err(|e| AppError::internal(format!("简历优化 JSON 结构不合法: {e}")))?;

@@ -65,7 +65,8 @@ pub async fn generate(state: &SharedState, session_id: u64) -> AppResult<()> {
     let user_prompt = prompt::render(prompt_name::REVIEWER, &vars)?;
 
     let llm = state.llm()?;
-    let raw = llm.chat_json(SYSTEM_PROMPT, &user_prompt, &[]).await?;
+    // 复盘要逐题给反馈,输出很长,用更高的 token/超时预算
+    let raw = llm.chat_json_long(SYSTEM_PROMPT, &user_prompt, &[]).await?;
     let value = crate::llm::extract_json(&raw)?;
     let report = parse_report(&value)?;
 
