@@ -1,6 +1,7 @@
 //! 简历文件解析:纯本地实现,不依赖外部服务。
 //!
 //! 支持 txt/md/xml/csv/htm/html(纯文本类)、docx、pdf(文本型)。
+//! 纯文本会自动识别 BOM、UTF-8 与 GBK/GB18030(中文 Windows 记事本默认编码)。
 //! 扫描件、图片型 PDF、旧版 .doc 无法解析,接口会返回明确提示,前端引导用户粘贴文本。
 
 use std::io::Read;
@@ -286,9 +287,73 @@ fn read_u32(bytes: &[u8], at: usize) -> Result<u32, String> {
 
 // ============================ PDF ============================
 
-/// PDF 文本提取:解压所有内容流,按 Tj/TJ 等操作符抽取文本,并尝试用 ToUnicode CMap 还原字符。
+/// PDF 文本提取。
+///
+/// 首选 pdf-extract:它会按「字体」解析 ToUnicode CMap、CID 编码与各类字体编码。
+/// 中文简历 PDF 几乎都是嵌入子集字体,多个字体的码位会互相覆盖,自己按全局
+/// CMap 猜会解出「韩文谚文 + 全角字母」这种伪字符,所以这里不再自己猜。
+/// pdf-extract 失败(非标准 PDF、缺 xref 等)时退回自研的简单内容流解析。
 fn pdf_text(bytes: &[u8]) -> AppResult<String> {
-    let streams = pdf_content_streams(bytes);
+    let primary = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+        pdf_extract::extract_text_from_mem(bytes)
+    }))
+    .ok()
+    .and_then(Result::ok);
+    if let Some(text) = primary {
+        if text.trim().chars().count() >= 20 {
+            return Ok(glue_spaced_ascii(&text));
+        }
+    }
+    let fallback = pdf_text_fallback(bytes);
+    match fallback {
+        Ok(text) if !looks_like_cid_garbage(&text) => Ok(glue_spaced_ascii(&text)),
+        _ => Err(AppError::business(
+            code::FILE_PARSE_FAILED,
+            "PDF 中的文字是嵌入字体且没有可用的编码表,无法可靠还原为文字。请直接粘贴简历文本,或用 Word/WPS 另存为 .docx 后上传",
+        )),
+    }
+}
+
+/// 部分 PDF(浏览器打印、语雀导出等)把每个字母单独定位,提取出来会变成 "E S l i n t"。
+/// 把连续出现(≥3 个)的单字符 ASCII 片段重新粘回单词。
+fn glue_spaced_ascii(text: &str) -> String {
+    fn is_glue_token(token: &str) -> bool {
+        token.chars().count() == 1
+            && token.chars().all(|c| c.is_ascii_alphanumeric() || matches!(c, '.' | '-' | '_' | '+' | '#' | '/' | ':'))
+    }
+    let mut out = String::with_capacity(text.len());
+    for line in text.lines() {
+        let tokens: Vec<&str> = line.split(' ').collect();
+        let mut idx = 0usize;
+        let mut first = true;
+        while idx < tokens.len() {
+            let mut end = idx;
+            while end < tokens.len() && is_glue_token(tokens[end]) {
+                end += 1;
+            }
+            let (piece, next) = if end - idx >= 3 {
+                (tokens[idx..end].concat(), end)
+            } else {
+                (tokens[idx].to_string(), idx + 1)
+            };
+            if !first {
+                out.push(' ');
+            }
+            out.push_str(&piece);
+            first = false;
+            idx = next;
+        }
+        out.push('\n');
+    }
+    out
+}
+
+/// 简单 PDF 文本提取:解压内容流,按 Tj/TJ 等操作符抽取文本,并尝试用 ToUnicode CMap 还原字符。
+fn pdf_text_fallback(bytes: &[u8]) -> AppResult<String> {
+    let streams: Vec<Vec<u8>> = pdf_content_streams(bytes)
+        .into_iter()
+        .filter(|stream| has_text_operator(stream))
+        .collect();
     if streams.is_empty() {
         return Err(AppError::business(
             code::FILE_PARSE_FAILED,
@@ -302,6 +367,34 @@ fn pdf_text(bytes: &[u8]) -> AppResult<String> {
         out.push('\n');
     }
     Ok(out)
+}
+
+/// 只处理真正的内容流,跳过字体程序、图片、元数据等二进制流。
+fn has_text_operator(stream: &[u8]) -> bool {
+    fn contains(haystack: &[u8], needle: &[u8]) -> bool {
+        haystack.windows(needle.len()).any(|w| w == needle)
+    }
+    contains(stream, b"Tj") || contains(stream, b"TJ") || contains(stream, b"Td") || contains(stream, b"BT")
+}
+
+/// 识别「嵌入子集字体 + ToUnicode 不全」时解出的伪字符:韩文谚文、私用区、替换字符。
+/// 这类字符在简历里几乎不可能出现,比例一高就说明解码方式错了。
+fn looks_like_cid_garbage(text: &str) -> bool {
+    let mut total = 0usize;
+    let mut bad = 0usize;
+    for ch in text.chars() {
+        if ch.is_whitespace() {
+            continue;
+        }
+        total += 1;
+        let code = ch as u32;
+        let hangul = (0x1100..=0x11FF).contains(&code) || (0xAC00..=0xD7AF).contains(&code);
+        let private_use = (0xE000..=0xF8FF).contains(&code);
+        if hangul || private_use || ch == '\u{fffd}' {
+            bad += 1;
+        }
+    }
+    total > 0 && bad * 20 > total
 }
 
 /// 取出所有已解压的内容流(FlateDecode 会被解开,其他编码原样使用)。
@@ -535,8 +628,10 @@ fn read_hex_string(chars: &[char], mut idx: usize, cmap: &std::collections::Hash
     for code in hex_codes(&hex) {
         if let Some(mapped) = cmap.get(&code) {
             text.push_str(mapped);
-        } else if let Some(ch) = char::from_u32(code) {
-            if !ch.is_control() {
+        } else if (0x20..=0x7e).contains(&code) {
+            // 没有映射时只保留可打印 ASCII;非 ASCII 的码位多半是字体 CID,
+            // 硬转成字符会得到韩文谚文之类的伪字符,不如直接丢弃。
+            if let Some(ch) = char::from_u32(code) {
                 text.push(ch);
             }
         }
@@ -767,5 +862,37 @@ mod tests {
         png.extend_from_slice(&[0u8; 64]);
         let err = extract("resume.txt", &png).unwrap_err();
         assert!(err.message().contains("不是纯文本"), "提示文案: {}", err.message());
+    }
+
+    /// 真实案例:中文 PDF 用嵌入子集字体,按全局 CMap 硬解会得到韩文伪字符。
+    #[test]
+    fn cid_garbage_is_detected() {
+        let garbled = "촀촐前端建设发规范\n촠E\nS\nl\ni\nn\nt\n겮\n촑l\ni\nn";
+        assert!(looks_like_cid_garbage(garbled), "应识别为伪字符");
+        assert!(!looks_like_cid_garbage("张三 · Java 后端开发,5 年经验,负责订单系统重构"));
+        assert!(!looks_like_cid_garbage(""));
+    }
+
+    /// 逐字母定位的 PDF 会解出 "E S l i n t",这里把它们粘回单词。
+    #[test]
+    fn spaced_ascii_letters_are_glued() {
+        let raw = "VSCode安装 E S l i n t 和 P r e t t i e r 插件\n配置VSCode s e t t i n g . j s o n 文件\n正常 的 句子 不受 影响";
+        let out = glue_spaced_ascii(raw);
+        assert!(out.contains("VSCode安装 ESlint 和 Prettier 插件"), "{out}");
+        assert!(out.contains("配置VSCode setting.json 文件"), "{out}");
+        assert!(out.contains("正常 的 句子 不受 影响"), "{out}");
+    }
+
+    /// 内容流里只有 CID 码位、又没有可用 ToUnicode 时,应报错要用户粘贴文本,而不是输出乱码。
+    #[test]
+    fn pdf_with_unmapped_cids_asks_for_text() {
+        let content = "BT /F1 12 Tf <00B600A900B5> Tj ET";
+        let raw = format!(
+            "%PDF-1.4\n4 0 obj\n<< /Length {} >>\nstream\n{}\nendstream\nendobj\ntrailer\n<< /Root 1 0 R >>\n%%EOF\n",
+            content.len(),
+            content
+        );
+        let err = extract("resume.pdf", raw.as_bytes()).unwrap_err();
+        assert!(err.message().contains("粘贴"), "提示文案: {}", err.message());
     }
 }

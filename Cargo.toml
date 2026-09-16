@@ -1,6 +1,6 @@
 [package]
 name = "interview-coach"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2021"
 description = "面试教练 - 单机版(Rust 实现, 无用户体系, 接入可配置大模型)"
 
@@ -24,6 +24,7 @@ parking_lot = "0.12.5"
 flate2 = "1.1.5"
 dotenvy = "0.15.7"
 encoding_rs = "0.8.41"
+pdf-extract = "0.12.0"
 
 [dev-dependencies]
 tower = { version = "0.5.3", features = ["util"] }
