@@ -18,6 +18,7 @@ pub mod routes;
 pub mod salary;
 pub mod state;
 pub mod store;
+pub mod updater;
 pub mod util;
 
 use std::path::Path;

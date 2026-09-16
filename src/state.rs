@@ -20,6 +20,8 @@ pub struct AppState {
     pub store: Store,
     pub question_bank: QuestionBank,
     pub salary: SalaryPlanner,
+    /// 同一时刻只允许一个更新任务(下载 + 替换文件)。
+    pub update_lock: tokio::sync::Mutex<()>,
 }
 
 pub type SharedState = Arc<AppState>;
@@ -38,6 +40,7 @@ impl AppState {
             store,
             question_bank: QuestionBank::embedded(),
             salary: SalaryPlanner::embedded(),
+            update_lock: tokio::sync::Mutex::new(()),
         })
     }
 

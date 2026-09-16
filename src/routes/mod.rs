@@ -6,6 +6,7 @@ pub mod plan;
 pub mod resume;
 pub mod salary;
 pub mod settings;
+pub mod update;
 
 use std::path::PathBuf;
 
@@ -28,6 +29,8 @@ pub fn router(state: SharedState, web_dir: PathBuf) -> Router {
         .route("/meta", get(settings::meta))
         .route("/config", get(settings::get_config).put(settings::update_config))
         .route("/config/test", post(settings::test_llm))
+        .route("/update/check", get(update::check))
+        .route("/update/apply", post(update::apply))
         .route("/interview/start", post(interview::start))
         .route("/interview/history", get(interview::history))
         .route("/interview/stats", get(interview::stats))

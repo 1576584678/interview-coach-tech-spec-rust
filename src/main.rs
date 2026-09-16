@@ -92,6 +92,8 @@ async fn main() {
                 .unwrap_or_else(|_| tracing_subscriber::EnvFilter::new("info,tower_http=warn")),
         )
         .init();
+    // 上一轮自更新留下的 `.old` 主程序:更新时它还在运行删不掉,现在可以清理了。
+    interview_coach::updater::cleanup_old_files();
 
     let args = match parse_args() {
         Ok(args) => args,

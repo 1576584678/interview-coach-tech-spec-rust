@@ -89,6 +89,8 @@
     getConfig: () => request('GET', '/config'),
     updateConfig: (data) => request('PUT', '/config', data),
     testLlm: () => request('POST', '/config/test'),
+    checkUpdate: () => request('GET', '/update/check'),
+    applyUpdate: () => request('POST', '/update/apply'),
 
     startInterview: (data) => request('POST', '/interview/start', data),
     answerInterview: (id, answer) => request('POST', `/interview/${id}/answer`, { answer }),

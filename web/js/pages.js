@@ -1082,6 +1082,16 @@
           <span class="tiny muted" id="test-result"></span>
         </div>
       </div>
+      <div class="card">
+        <h2>软件更新<span class="sub">从 GitHub Releases 获取最新版本</span></h2>
+        <div class="row" style="flex-wrap:wrap">
+          <span class="tiny muted">当前版本 <b id="update-current">${escapeHtml(meta.version || '未知')}</b></span>
+          <button class="btn shrink" id="check-update">检查更新</button>
+          <button class="btn btn-primary shrink" id="apply-update" hidden>立即更新</button>
+          <span class="tiny" id="update-result"></span>
+        </div>
+        <div class="hint">更新只覆盖程序与前端文件,不会改动 config.toml 与 data 目录;下载完成后需要重启程序才会生效。</div>
+      </div>
       <div class="grid grid-2">
         <div class="card">
           <h2>本机信息</h2>
@@ -1144,6 +1154,40 @@
       } finally {
         button.disabled = false;
       }
+    };
+    $('#check-update').onclick = async () => {
+      const button = $('#check-update');
+      button.disabled = true;
+      $('#apply-update').hidden = true;
+      $('#update-result').textContent = '正在查询最新版本…';
+      try {
+        const info = await Api.checkUpdate();
+        $('#update-current').textContent = info.currentVersion;
+        $('#update-result').textContent = info.message;
+        $('#apply-update').hidden = !info.hasUpdate;
+      } catch (err) {
+        $('#update-result').textContent = err.message;
+      } finally {
+        button.disabled = false;
+      }
+    };
+    $('#apply-update').onclick = () => {
+      confirmDialog('立即更新?', '将覆盖程序与前端文件(不影响 config.toml 与 data 目录),完成后需要重启程序。', async () => {
+        const button = $('#apply-update');
+        button.disabled = true;
+        $('#check-update').disabled = true;
+        $('#update-result').textContent = '正在下载并安装更新,请稍候…';
+        try {
+          const result = await Api.applyUpdate();
+          $('#update-result').textContent = result.message;
+          toast('更新完成,请重启程序', 'success');
+        } catch (err) {
+          $('#update-result').textContent = err.message;
+          toast('更新失败', 'error');
+          button.disabled = false;
+          $('#check-update').disabled = false;
+        }
+      });
     };
   };
 

@@ -74,7 +74,7 @@ $env:LLM_API_KEY="sk-xxxx"; cargo run --release
 cargo run                           # 启动(默认 127.0.0.1:8080)
 cargo run -- --port 9000            # 换端口
 cargo run -- --no-browser           # 不自动打开浏览器
-cargo test                          # 19 个单元测试 + 6 个接口冒烟测试
+cargo test                          # 43 个单元测试 + 9 个接口冒烟测试
 cargo run -- --help                 # 查看全部参数
 cargo build --release               # 产出 target/release/interview-coach.exe(本机若开了智能应用控制会失败,见常见问题 1)
 ```
@@ -106,6 +106,20 @@ pwsh -File tools\make-dist.ps1 -NoZip                             # 只生成目
   首次运行可能弹 SmartScreen,需要点「更多信息 → 仍要运行」;杀软也可能误报,需加白名单。
 - 只支持 64 位 Windows 10/11(本机为 `x86_64-pc-windows-gnu` 构建)。
 
+## 自动更新
+
+页面 **设置 → 软件更新** 提供「检查更新 / 立即更新」:读取 GitHub Releases 上的最新版本,
+下载当前平台的压缩包,把 exe、`web/`、启动脚本就地覆盖,然后提示重启。
+
+- **只替换程序文件**:`config.toml`、`data/`、`.env` 一律不动,重启后数据与配置照旧。
+- 下载优先走 GitHub API(`api.github.com` 的资源地址,会 302 到 release-assets),失败才回退到
+  `github.com/.../releases/download/...` —— 部分网络下 `github.com` 连不上,而 API 域名可达。
+- 只允许 GitHub 官方域名;解包时拒绝绝对路径与 `..`(防 zip-slip);包体超过 200 MB 直接中止。
+- Windows 下正在运行的 exe 无法覆盖,替换时先把旧文件改名成 `interview-coach.exe.old`,
+  下次启动由程序自己清理;macOS/Linux 会保留可执行权限(0755)。
+
+想指向别的仓库(例如自己 fork 的),设环境变量 `INTERVIEW_COACH_REPO=owner/name` 即可。
+
 ## 目录结构
 
 ```
@@ -135,6 +149,7 @@ pwsh -File tools\make-dist.ps1 -NoZip                             # 只生成目
 │   ├── question_bank.rs        # 内置题库
 │   ├── browser.rs              # 打开系统默认浏览器(自实现,无额外依赖)
 │   ├── routes/                 # HTTP 路由
+│   ├── updater.rs              # 检查 GitHub Releases 并就地更新程序与前端
 │   └── data/*.json             # 内置题库与薪资基准数据
 ├── web/                        # 免构建前端(原生 JS + CSS)
 └── tests/api_smoke.rs          # 接口冒烟测试
@@ -151,6 +166,8 @@ pwsh -File tools\make-dist.ps1 -NoZip                             # 只生成目
 | GET/PUT | `/api/config` | 读取 / 更新大模型配置 |
 | POST | `/api/config/test` | 测试大模型连通性 |
 | POST | `/api/interview/start` | 开始面试,返回第一题 |
+| GET | `/api/update/check` | 查最新 Release 并和本机版本比较 |
+| POST | `/api/update/apply` | 下载并就地更新(覆盖 exe 与 `web/`) |
 | POST | `/api/interview/{id}/answer` | 回答当前题,返回下一题 |
 | POST | `/api/interview/{id}/answer/stream` | 同上,SSE 流式返回下一题 |
 | POST | `/api/interview/{id}/skip` | 跳过当前题 |
@@ -223,7 +240,7 @@ cargo run
 ## 开发与测试
 
 ```powershell
-cargo test        # 19 个单元测试 + 6 个接口冒烟测试
+cargo test        # 43 个单元测试 + 9 个接口冒烟测试
 cargo clippy      # 可选
 ```
 
@@ -233,4 +250,5 @@ cargo clippy      # 可选
 
 - 单元测试:Prompt 渲染、JSON 容错抽取、题库去重、薪资城市系数与年限解析、复盘解析、docx(store 与 deflate 两种压缩)与 PDF 文本抽取。
 - 冒烟测试:健康检查、元数据、薪资查询、简历落盘、配置保存、未配置大模型时的错误码。
+- 单元测试(更新):版本号逐段比较、平台资源名映射、zip 与 tar.gz 解包、zip-slip 与绝对路径拒绝、覆盖安装时保留 `config.toml` 与 `data/`。
 - 端到端:用本地 mock 的 OpenAI 兼容服务验证过完整链路(开始面试 → SSE 流式出题 → 逐题作答/跳题 → 结束 → 异步复盘 → 统计 → 提升计划 → 简历上传/诊断/优化/STAR → 薪资兜底),无需真实 API Key。
