@@ -206,15 +206,30 @@ jobs:
           TAG: ${{ github.ref_type == 'tag' && github.ref_name || inputs.release_tag }}
         run: |
           set -euo pipefail
+          gh --version
+          echo "仓库=$GITHUB_REPOSITORY 标签=$TAG 事件=${{ github.event_name }}"
           notes="面试教练 · 单机版($TAG)
 
           - Windows x64:解压后双击 启动面试教练.cmd
           - Linux x64 / macOS:解压后 chmod +x interview-coach start.sh,再运行 ./start.sh
           - macOS 未签名,首次打开需右键「打开」,或执行 xattr -dr com.apple.quarantine 该目录
           - 首次使用在页面右上角「设置」里填大模型 Base URL / API Key / 模型名"
-          if [[ "$GITHUB_REF_TYPE" == "tag" ]]; then
-            gh release create "$TAG" release/* --title "$TAG" --notes "$notes"
-          else
-            gh release create "$TAG" release/* --title "$TAG" --notes "$notes" --target "$GITHUB_SHA"
+
+          # 先探一次写权限:有权限时缺 tag_name 会返回 422,没权限则是 403
+          write_code="$(curl -sS -o /dev/null -w '%{http_code}' -X POST \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/$GITHUB_REPOSITORY/releases" -d '{}' || echo 000)"
+          echo "写权限探测(releases):HTTP $write_code(422=有权限,403=权限不足)"
+          if [[ "$write_code" == "403" ]]; then
+            echo "GITHUB_TOKEN 无法写仓库:请到 仓库 Settings -> Actions -> General -> Workflow permissions 选择 Read and write permissions" >&2
+            exit 1
           fi
-          gh release view "$TAG" --json url,assets
+
+          if gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$TAG" > /dev/null 2>&1; then
+            # 标签已存在(推标签触发,或手动填的标签早已打过)
+            gh release create "$TAG" release/* --repo "$GITHUB_REPOSITORY" --verify-tag --title "$TAG" --notes "$notes"
+          else
+            gh release create "$TAG" release/* --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title "$TAG" --notes "$notes"
+          fi
+          gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json url,assets
