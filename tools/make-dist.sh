@@ -7,6 +7,15 @@
 #   bash tools/make-dist.sh target/aarch64-apple-darwin/release/interview-coach interview-coach-macos-arm64
 set -euo pipefail
 
+# 统一按字节处理文件名(tar 在非 UTF-8 locale 下对中文名可能报 Cannot stat)
+export LC_ALL=C
+export LANG=C
+
+# IC_DIST_DEBUG=1 时打印每条命令,便于在 CI 日志里定位失败点
+if [[ "${IC_DIST_DEBUG:-}" == "1" ]]; then
+  set -x
+fi
+
 exe="${1:-}"
 name="${2:-interview-coach}"
 out_dir="${3:-dist}"

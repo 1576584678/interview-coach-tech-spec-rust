@@ -114,25 +114,30 @@ jobs:
       - name: 打包(Linux / macOS)
         if: runner.os != 'Windows'
         shell: bash
+        env:
+          # 打包脚本打印每条命令,失败时日志能直接指到出错的命令
+          IC_DIST_DEBUG: "1"
         run: |
           set -euo pipefail
+          archive="dist/interview-coach-${{ matrix.platform }}.tar.gz"
+          echo "工作目录: $(pwd)"
+          df -h . || true
           bash tools/make-dist.sh \
             "target/${{ matrix.target }}/release/interview-coach" \
             "interview-coach-${{ matrix.platform }}"
-          archive="dist/interview-coach-${{ matrix.platform }}.tar.gz"
           if [[ ! -s "$archive" ]]; then
             echo "没有生成压缩包: $archive" >&2
             ls -l dist >&2 || true
             exit 1
           fi
-          # 不能用 `tar -tzf | grep -q`:grep 命中即退出会让 tar 收到 SIGPIPE,
-          # 在 pipefail 下整个管道被判失败。先取到变量里再判断。
-          listing="$(tar -tzf "$archive")"
-          printf '%s\n' "$listing"
-          if ! grep -q "/web/index.html" <<< "$listing"; then
-            echo "包内缺少 web/index.html" >&2
-            exit 1
-          fi
+          # 直接解包再校验文件,比解析 tar 清单直观,也避开管道相关的坑
+          rm -rf "$RUNNER_TEMP/pkgcheck"
+          mkdir -p "$RUNNER_TEMP/pkgcheck"
+          tar -xzf "$archive" -C "$RUNNER_TEMP/pkgcheck"
+          pkg="$RUNNER_TEMP/pkgcheck/interview-coach-${{ matrix.platform }}"
+          test -f "$pkg/web/index.html"
+          test -x "$pkg/interview-coach"
+          test -f "$pkg/start.sh"
           ls -lh "$archive"
 
       - name: 上传制品
