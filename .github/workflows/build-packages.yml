@@ -119,7 +119,21 @@ jobs:
           bash tools/make-dist.sh \
             "target/${{ matrix.target }}/release/interview-coach" \
             "interview-coach-${{ matrix.platform }}"
-          tar -tzf "dist/interview-coach-${{ matrix.platform }}.tar.gz" | grep -q "/web/index.html"
+          archive="dist/interview-coach-${{ matrix.platform }}.tar.gz"
+          if [[ ! -s "$archive" ]]; then
+            echo "没有生成压缩包: $archive" >&2
+            ls -l dist >&2 || true
+            exit 1
+          fi
+          # 不能用 `tar -tzf | grep -q`:grep 命中即退出会让 tar 收到 SIGPIPE,
+          # 在 pipefail 下整个管道被判失败。先取到变量里再判断。
+          listing="$(tar -tzf "$archive")"
+          printf '%s\n' "$listing"
+          if ! grep -q "/web/index.html" <<< "$listing"; then
+            echo "包内缺少 web/index.html" >&2
+            exit 1
+          fi
+          ls -lh "$archive"
 
       - name: 上传制品
         uses: actions/upload-artifact@v4
