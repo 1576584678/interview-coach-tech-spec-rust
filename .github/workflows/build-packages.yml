@@ -1,9 +1,19 @@
 name: 构建便携包(Windows / Linux / macOS)
 
-# 手动触发:仓库 Actions 页面 -> 左侧选本工作流 -> Run workflow。
-# 三个平台统一构建 release 版(体积小、可直接分发)。
+# 两种触发方式:
+# 1) 手动 Run workflow:只构建,产物在本次运行的 Artifacts 里下载;
+#    若填了 release_tag(如 v0.1.0),构建成功后还会自动发布 Release。
+# 2) 推一个 v* 标签:构建成功后自动发布 Release。
 on:
   workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 发布为 Release 的标签(如 v0.1.0;留空则只构建不发布)
+        required: false
+        default: ""
+  push:
+    tags:
+      - "v*"
 
 permissions:
   contents: read
@@ -149,3 +159,62 @@ jobs:
             dist/*.tar.gz
           if-no-files-found: error
           retention-days: 14
+
+  # 四个平台都成功后才发布,避免发出「缺平台」的 Release
+  release:
+    name: 发布 Release
+    needs: build
+    if: github.ref_type == 'tag' || (github.event_name == 'workflow_dispatch' && inputs.release_tag != '')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: 下载三平台制品
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - name: 整理文件名
+        env:
+          TAG: ${{ github.ref_type == 'tag' && github.ref_name || inputs.release_tag }}
+        run: |
+          set -euo pipefail
+          mkdir -p release
+          for f in artifacts/*.zip artifacts/*.tar.gz; do
+            [[ -e "$f" ]] || continue
+            base="$(basename "$f")"
+            if [[ "$base" == *.tar.gz ]]; then
+              name="${base%.tar.gz}"
+              ext="tar.gz"
+            else
+              name="${base%.*}"
+              ext="${base##*.}"
+            fi
+            cp "$f" "release/${name}-${TAG}.${ext}"
+          done
+          ls -lh release
+          count="$(ls -1 release | wc -l)"
+          if [[ "$count" -ne 4 ]]; then
+            echo "期望 4 个平台包,实际 $count 个" >&2
+            exit 1
+          fi
+
+      - name: 创建 Release 并上传附件
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.ref_type == 'tag' && github.ref_name || inputs.release_tag }}
+        run: |
+          set -euo pipefail
+          notes="面试教练 · 单机版($TAG)
+
+          - Windows x64:解压后双击 启动面试教练.cmd
+          - Linux x64 / macOS:解压后 chmod +x interview-coach start.sh,再运行 ./start.sh
+          - macOS 未签名,首次打开需右键「打开」,或执行 xattr -dr com.apple.quarantine 该目录
+          - 首次使用在页面右上角「设置」里填大模型 Base URL / API Key / 模型名"
+          if [[ "$GITHUB_REF_TYPE" == "tag" ]]; then
+            gh release create "$TAG" release/* --title "$TAG" --notes "$notes"
+          else
+            gh release create "$TAG" release/* --title "$TAG" --notes "$notes" --target "$GITHUB_SHA"
+          fi
+          gh release view "$TAG" --json url,assets
