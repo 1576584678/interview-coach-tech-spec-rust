@@ -680,6 +680,7 @@ dependencies = [
  "axum",
  "chrono",
  "dotenvy",
+ "encoding_rs",
  "flate2",
  "futures",
  "futures-util",

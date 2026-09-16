@@ -185,6 +185,51 @@ async fn resume_from_text_is_persisted() {
     assert!(data_file.exists(), "本地数据文件未生成: {}", data_file.display());
 }
 
+/// 中文 Windows 上传 GBK 编码的 txt(记事本默认另存格式)不能解成乱码。
+#[tokio::test]
+async fn gbk_resume_upload_is_decoded() {
+    let state = test_state("gbk-upload");
+    let gbk: &[u8] = &[
+        0xB6, 0xA9, 0xB5, 0xA5, 0xCF, 0xB5, 0xCD, 0xB3, 0xD6, 0xD8, 0xB9, 0xB9, // 订单系统重构
+        0x2C, 0xB0, 0xD1, 0xCF, 0xC2, 0xB5, 0xA5, 0xBA, 0xC4, 0xCA, 0xB1, 0xB4, 0xD3, // ,把下单耗时从
+        0x38, 0x30, 0x30, 0x6D, 0x73, 0xBD, 0xB5, 0xB5, 0xBD, 0x32, 0x30, 0x30, 0x6D, 0x73, // 800ms降到200ms
+    ];
+    let boundary = "----interviewCoachBoundary";
+    let mut body: Vec<u8> = Vec::new();
+    body.extend_from_slice(
+        format!(
+            "--{boundary}\r\nContent-Disposition: form-data; name=\"file\"; filename=\"简历.txt\"\r\nContent-Type: text/plain\r\n\r\n"
+        )
+        .as_bytes(),
+    );
+    body.extend_from_slice(gbk);
+    body.extend_from_slice(format!("\r\n--{boundary}--\r\n").as_bytes());
+
+    let router = interview_coach::build_router(state.clone(), std::env::temp_dir());
+    let response = router
+        .oneshot(
+            Request::builder()
+                .method("POST")
+                .uri("/api/resume/upload")
+                .header("content-type", format!("multipart/form-data; boundary={boundary}"))
+                .body(Body::from(body))
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+    assert_eq!(response.status(), StatusCode::OK);
+    let raw_body = response.into_body().collect().await.unwrap().to_bytes();
+    let value: Value = serde_json::from_slice(&raw_body).unwrap();
+    assert_eq!(value["code"], 0, "{value}");
+    let resume_id = value["data"]["resumeId"].as_u64().unwrap();
+
+    let (_, detail) = get_json(state, &format!("/api/resume/{resume_id}")).await;
+    let raw = detail["data"]["rawText"].as_str().expect("缺少 rawText");
+    assert!(raw.contains("订单系统重构"), "解析结果: {raw}");
+    assert!(raw.contains("把下单耗时从800ms降到200ms"), "解析结果: {raw}");
+    assert!(!raw.contains('\u{fffd}'), "出现替换字符: {raw}");
+}
+
 #[tokio::test]
 async fn config_can_be_updated_and_saved() {
     let state = test_state("config");

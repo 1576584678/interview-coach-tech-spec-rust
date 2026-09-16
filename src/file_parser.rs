@@ -5,6 +5,8 @@
 
 use std::io::Read;
 
+use encoding_rs::GB18030;
+
 use crate::error::{code, AppError, AppResult};
 use crate::llm::abbreviate;
 
@@ -28,8 +30,18 @@ pub fn extract(file_name: &str, bytes: &[u8]) -> AppResult<String> {
         .unwrap_or("")
         .to_lowercase();
     let text = match ext.as_str() {
-        "txt" | "md" | "markdown" | "text" | "json" | "csv" | "log" | "yml" | "yaml" => decode_text(bytes),
-        "html" | "htm" => strip_html(&decode_text(bytes)),
+        "txt" | "md" | "markdown" | "text" | "json" | "csv" | "log" | "yml" | "yaml" => {
+            if looks_binary(bytes) {
+                return Err(binary_hint(&ext));
+            }
+            decode_text(bytes)
+        }
+        "html" | "htm" => {
+            if looks_binary(bytes) {
+                return Err(binary_hint(&ext));
+            }
+            strip_html(&decode_text(bytes))
+        }
         "docx" => docx_text(bytes)?,
         "pdf" => pdf_text(bytes)?,
         "doc" => {
@@ -61,13 +73,51 @@ pub fn extract(file_name: &str, bytes: &[u8]) -> AppResult<String> {
 }
 
 fn decode_text(bytes: &[u8]) -> String {
-    let text = String::from_utf8_lossy(bytes).to_string();
-    text.trim_start_matches('\u{feff}').to_string()
+    // 1. 有 BOM 就按 BOM 声明的编码解(UTF-8 / UTF-16LE / UTF-16BE)。
+    if let Some((encoding, bom_len)) = encoding_rs::Encoding::for_bom(bytes) {
+        let (text, _) = encoding.decode_without_bom_handling(&bytes[bom_len..]);
+        return text.trim_start_matches('\u{feff}').to_string();
+    }
+    // 2. 合法 UTF-8(含纯 ASCII)直接用,避免对 UTF-8 文本做多余猜测。
+    if let Ok(text) = std::str::from_utf8(bytes) {
+        return text.to_string();
+    }
+    // 3. 中文 Windows 上记事本/Word 导出的 txt 常见 GBK/GB2312,用 GB18030(超集)解。
+    let (text, _, had_errors) = GB18030.decode(bytes);
+    if !had_errors && !looks_garbled(&text) {
+        return text.into_owned();
+    }
+    // 4. 都不像,退回 UTF-8 宽松解码(保留替换字符,便于上层提示用户)。
+    String::from_utf8_lossy(bytes).to_string()
+}
+
+/// 判断解码结果是否大面积异常(替换字符或控制字符过多),用于放弃错误编码的猜测。
+fn looks_garbled(text: &str) -> bool {
+    let total = text.chars().count();
+    if total == 0 {
+        return false;
+    }
+    let bad = text
+        .chars()
+        .filter(|c| *c == '\u{fffd}' || (c.is_control() && !matches!(c, '\n' | '\r' | '\t')))
+        .count();
+    bad * 10 > total
 }
 
 fn looks_binary(bytes: &[u8]) -> bool {
+    // 带 BOM 的 UTF-16/UTF-8 文本本身会含 0 字节,先按 BOM 放行。
+    if encoding_rs::Encoding::for_bom(bytes).is_some() {
+        return false;
+    }
     let sample = &bytes[..bytes.len().min(1024)];
     sample.contains(&0u8)
+}
+
+fn binary_hint(ext: &str) -> AppError {
+    AppError::business(
+        code::FILE_PARSE_FAILED,
+        format!("文件 .{ext} 看起来不是纯文本(可能是图片或二进制文件),请上传 txt/md/docx/pdf 或直接粘贴简历文本"),
+    )
 }
 
 fn cleanup(text: &str) -> String {
@@ -671,5 +721,51 @@ mod tests {
     fn empty_file_is_rejected() {
         let err = extract("resume.txt", b"").unwrap_err();
         assert!(err.message().contains("为空"));
+    }
+
+    /// 中文 Windows 另存为 txt 默认是 GBK,不能当成 UTF-8 解出乱码。
+    #[test]
+    fn gbk_text_is_decoded() {
+        let gbk: &[u8] = &[
+            0xB6, 0xA9, 0xB5, 0xA5, 0xCF, 0xB5, 0xCD, 0xB3, 0xD6, 0xD8, 0xB9, 0xB9, // 订单系统重构
+            0x2C, 0xB0, 0xD1, 0xCF, 0xC2, 0xB5, 0xA5, 0xBA, 0xC4, 0xCA, 0xB1, 0xB4, 0xD3, // ,把下单耗时
+            0x38, 0x30, 0x30, 0x6D, 0x73, 0xBD, 0xB5, 0xB5, 0xBD, 0x32, 0x30, 0x30, 0x6D, 0x73, // 800ms降到200ms
+            0x0D, 0x0A, 0xD5, 0xC5, 0xC8, 0xFD, 0x20, 0x4A, 0x61, 0x76, 0x61, // 张三 Java
+        ];
+        let bytes = gbk.to_vec();
+        assert!(std::str::from_utf8(&bytes).is_err(), "该用例必须不是合法 UTF-8");
+        let text = extract("简历.txt", &bytes).expect("GBK 解析失败");
+        assert!(text.contains("订单系统重构"), "解析结果: {text}");
+        assert!(text.contains("张三"), "解析结果: {text}");
+        assert!(!text.contains('\u{fffd}'), "不应出现替换字符: {text}");
+    }
+
+    #[test]
+    fn utf8_bom_is_stripped() {
+        let mut raw = vec![0xEF, 0xBB, 0xBF];
+        raw.extend_from_slice("张三 · Java 后端开发,负责订单系统重构".as_bytes());
+        let text = extract("resume.txt", &raw).expect("UTF-8 BOM 解析失败");
+        assert!(text.starts_with("张三"), "解析结果: {text}");
+        assert!(text.contains("订单系统重构"));
+    }
+
+    #[test]
+    fn utf16le_text_is_decoded() {
+        let content = "张三 · Java 后端开发,负责订单系统重构";
+        let mut raw = vec![0xFF, 0xFE];
+        for unit in content.encode_utf16() {
+            raw.extend_from_slice(&unit.to_le_bytes());
+        }
+        let text = extract("resume.txt", &raw).expect("UTF-16LE 解析失败");
+        assert!(text.contains("订单系统重构"), "解析结果: {text}");
+    }
+
+    /// 图片/二进制文件被改名成 .txt 时,应给出明确提示而不是把乱码喂给大模型。
+    #[test]
+    fn binary_txt_is_rejected_with_hint() {
+        let mut png = vec![0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A];
+        png.extend_from_slice(&[0u8; 64]);
+        let err = extract("resume.txt", &png).unwrap_err();
+        assert!(err.message().contains("不是纯文本"), "提示文案: {}", err.message());
     }
 }

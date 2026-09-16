@@ -23,6 +23,7 @@ chrono = { version = "0.4.42", features = ["serde"] }
 parking_lot = "0.12.5"
 flate2 = "1.1.5"
 dotenvy = "0.15.7"
+encoding_rs = "0.8.41"
 
 [dev-dependencies]
 tower = { version = "0.5.3", features = ["util"] }
