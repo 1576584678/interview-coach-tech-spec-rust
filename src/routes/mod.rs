@@ -9,9 +9,9 @@ pub mod settings;
 
 use std::path::PathBuf;
 
+use axum::extract::DefaultBodyLimit;
 use axum::routing::{delete, get, post};
 use axum::Router;
-use tower_http::cors::CorsLayer;
 use tower_http::services::{ServeDir, ServeFile};
 use tower_http::trace::TraceLayer;
 
@@ -51,7 +51,10 @@ pub fn router(state: SharedState, web_dir: PathBuf) -> Router {
         .route("/resume/:id/star", post(resume::star))
         .route("/salary/estimate", get(salary::estimate))
         .with_state(state)
-        .fallback(api_not_found);
+        .fallback(api_not_found)
+        // 上传上限与 file_parser 保持一致:axum 的 Multipart 默认只允许 2MB,
+        // 稍大的 PDF/带图 docx 会在读取阶段直接失败。
+        .layer(DefaultBodyLimit::max(crate::file_parser::MAX_FILE_SIZE));
 
     let index = web_dir.join("index.html");
     // 前端是 hash 路由,未知路径一律回落到 index.html(直接访问 /settings 也能打开)
@@ -60,6 +63,7 @@ pub fn router(state: SharedState, web_dir: PathBuf) -> Router {
     Router::new()
         .nest("/api", api)
         .fallback_service(static_service)
-        .layer(CorsLayer::permissive())
+        // 不启用 CORS:服务只监听本机、前端与接口同源,permissive CORS
+        // 会让任意网页都能读写本地数据(含简历原文与 API Key 配置)。
         .layer(TraceLayer::new_for_http())
 }

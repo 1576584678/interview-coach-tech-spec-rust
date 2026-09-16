@@ -63,6 +63,8 @@ impl SalaryPlanner {
         }
         let row = hit?;
 
+        // 两步折算:先按城市档位取基准行(基准表本身已按 tier1 / 新一线 / 二线分档),
+        // 再乘该城市的相对系数;note 里的说法必须与这里的口径一致。
         let factor = resolve_city_factor(city);
         let factor_pct = (factor * 100.0).round() as i64;
         let (p25, p50, p75) = if factor_pct == 100 {
@@ -82,8 +84,9 @@ impl SalaryPlanner {
             confidence: confidence.to_string(),
             source: "benchmark".to_string(),
             note: Some(format!(
-                "以北京公开招聘市场数据为基准×{factor_pct}%折算至{},反映主流范围,个体差异取决于公司、面试表现与谈判,仅供参考。",
-                if city.trim().is_empty() { "该城市" } else { city.trim() }
+                "基准数据取自{}公开招聘薪酬,再按{}系数×{factor_pct}%折算,反映主流范围,个体差异取决于公司、面试表现与谈判,仅供参考。",
+                city_label,
+                if city.trim().is_empty() { "默认城市" } else { city.trim() }
             )),
         })
     }

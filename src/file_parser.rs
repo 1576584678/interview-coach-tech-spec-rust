@@ -8,8 +8,8 @@ use std::io::Read;
 use crate::error::{code, AppError, AppResult};
 use crate::llm::abbreviate;
 
-/// 单文件最大 12MB,避免误传大文件把内存吃满。
-const MAX_FILE_SIZE: usize = 12 * 1024 * 1024;
+/// 单文件最大 12MB,避免误传大文件把内存吃满;路由层也用它作为请求体上限。
+pub const MAX_FILE_SIZE: usize = 12 * 1024 * 1024;
 const MAX_TEXT_CHARS: usize = 60_000;
 
 pub fn extract(file_name: &str, bytes: &[u8]) -> AppResult<String> {

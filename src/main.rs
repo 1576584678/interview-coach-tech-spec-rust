@@ -112,6 +112,8 @@ async fn main() {
             std::process::exit(1);
         }
     };
+    // 记住文件里的原始配置:命令行/环境变量只影响本次进程,不写回 config.toml
+    let file_baseline = config.clone();
     config.apply_env_overrides();
     if let Some(host) = args.host {
         config.server.host = host;
@@ -131,7 +133,7 @@ async fn main() {
     }
     // 首次运行落盘一份 config.toml,方便直接在文件里改配置
     if !config_file.path().exists() {
-        if let Err(err) = config_file.save(&config) {
+        if let Err(err) = config_file.save(&file_baseline) {
             eprintln!("写入配置文件失败: {}", err.message());
         }
     }

@@ -126,22 +126,10 @@ async fn run_stream_answer(
     answer: String,
     tx: mpsc::UnboundedSender<StreamEvent>,
 ) {
-    let plan = match interview_service::begin_answer(&state, session_id, Some(&answer)) {
+    let plan = match interview_service::prepare_answer(&state, session_id, Some(&answer)) {
         Ok(Some(plan)) => plan,
         Ok(None) => {
-            let (order, qa_type) = state.store.read(|db| {
-                db.sessions
-                    .iter()
-                    .find(|s| s.id == session_id)
-                    .and_then(|s| s.last_qa().map(|qa| (qa.question_order, qa.question_type.clone())))
-                    .unwrap_or((0, "open".to_string()))
-            });
-            let _ = tx.send(StreamEvent::Done(AnswerResponse {
-                next_question: None,
-                question_type: qa_type,
-                question_order: order,
-                is_last: true,
-            }));
+            let _ = tx.send(StreamEvent::Done(interview_service::answered_last(&state, session_id)));
             return;
         }
         Err(err) => {
@@ -165,7 +153,7 @@ async fn run_stream_answer(
         .await;
 
     match result {
-        Ok(question) => match interview_service::finish_answer(&state, &plan, &question) {
+        Ok(question) => match interview_service::commit_answer(&state, &plan, &question) {
             Ok(response) => {
                 let _ = tx.send(StreamEvent::Done(response));
             }

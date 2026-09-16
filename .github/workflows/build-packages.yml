@@ -1,0 +1,132 @@
+name: 构建便携包(Windows / Linux / macOS)
+
+# 手动触发:仓库 Actions 页面 -> 左侧选本工作流 -> Run workflow。
+# 三个平台统一构建 release 版(体积小、可直接分发)。
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: ${{ matrix.platform }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            platform: windows-x64
+            target: x86_64-pc-windows-msvc
+          - os: ubuntu-latest
+            platform: linux-x64
+            target: x86_64-unknown-linux-gnu
+          - os: macos-latest
+            platform: macos-arm64
+            target: aarch64-apple-darwin
+          - os: macos-latest
+            platform: macos-x64
+            target: x86_64-apple-darwin
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 安装 Rust 工具链
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: 缓存依赖
+        uses: Swatinem/rust-cache@v2
+        with:
+          key: ${{ matrix.target }}
+
+      - name: 编译(release)
+        run: cargo build --release --target ${{ matrix.target }}
+
+      - name: 冒烟测试(Linux / macOS)
+        if: runner.os != 'Windows'
+        shell: bash
+        env:
+          BIN: target/${{ matrix.target }}/release/interview-coach
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/ic-data"
+          "$BIN" --help > /dev/null
+          "$BIN" --no-browser --port 8231 \
+            --data-dir "$RUNNER_TEMP/ic-data" \
+            --config "$RUNNER_TEMP/ic-data/config.toml" > "$RUNNER_TEMP/ic.log" 2>&1 &
+          pid=$!
+          ok=""
+          for _ in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:8231/api/health > /dev/null 2>&1; then ok=1; break; fi
+            sleep 1
+          done
+          kill "$pid" 2>/dev/null || true
+          wait "$pid" 2>/dev/null || true
+          if [[ -z "$ok" ]]; then
+            echo "服务未在 30 秒内就绪,日志:" >&2
+            cat "$RUNNER_TEMP/ic.log" >&2 || true
+            exit 1
+          fi
+          echo "冒烟测试通过"
+
+      - name: 冒烟测试(Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $bin = "target/${{ matrix.target }}/release/interview-coach.exe"
+          $data = Join-Path $env:RUNNER_TEMP "ic-data"
+          New-Item -ItemType Directory -Force -Path $data | Out-Null
+          & $bin --help | Out-Null
+          $proc = Start-Process -FilePath $bin -WindowStyle Hidden -PassThru -ArgumentList @(
+            "--no-browser", "--port", "8231",
+            "--data-dir", $data,
+            "--config", (Join-Path $data "config.toml")
+          )
+          $ok = $false
+          foreach ($i in 1..30) {
+            Start-Sleep -Seconds 1
+            try {
+              $null = Invoke-RestMethod -Uri "http://127.0.0.1:8231/api/health" -TimeoutSec 3
+              $ok = $true
+              break
+            }
+            catch { }
+          }
+          Stop-Process -Id $proc.Id -Force -ErrorAction SilentlyContinue
+          if (-not $ok) { throw "服务未在 30 秒内就绪" }
+          Write-Host "冒烟测试通过"
+
+      - name: 打包(Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          ./tools/make-dist.ps1 `
+            -ExePath "target/${{ matrix.target }}/release/interview-coach.exe" `
+            -Name "interview-coach-${{ matrix.platform }}" `
+            -OutDir dist
+          if (-not (Test-Path "dist/interview-coach-${{ matrix.platform }}/web/index.html")) {
+            throw "包内缺少 web/index.html"
+          }
+
+      - name: 打包(Linux / macOS)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash tools/make-dist.sh \
+            "target/${{ matrix.target }}/release/interview-coach" \
+            "interview-coach-${{ matrix.platform }}"
+          tar -tzf "dist/interview-coach-${{ matrix.platform }}.tar.gz" | grep -q "/web/index.html"
+
+      - name: 上传制品
+        uses: actions/upload-artifact@v4
+        with:
+          name: interview-coach-release-${{ matrix.platform }}
+          path: |
+            dist/*.zip
+            dist/*.tar.gz
+          if-no-files-found: error
+          retention-days: 14

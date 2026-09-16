@@ -368,17 +368,29 @@
             signal: streamAbort.signal,
             onDelta: (text) => { buffered += text; preview.textContent = buffered; },
             onDone: (response) => { applyAnswerResult(answer, response); },
-            onError: (payload) => { fail(payload); renderSession(); },
+            onError: (payload) => { fail(payload); resetAnswerForm(); },
           });
         } catch (err) {
           if (err.name === 'AbortError') return;
           fail(err);
-          renderSession();
+          resetAnswerForm();
         } finally {
           streamAbort = null;
         }
       };
     }
+  }
+
+  /** 出题失败时后端没有落库任何内容:保留已输入的答案,让用户直接重试 */
+  function resetAnswerForm() {
+    const submit = $('#submit-btn');
+    const skip = $('#skip-btn');
+    if (submit) submit.disabled = false;
+    if (skip) skip.disabled = false;
+    const hint = $('#stream-hint');
+    if (hint) hint.textContent = '生成下一题失败,可直接重试';
+    const preview = $('#next-question');
+    if (preview) preview.textContent = '';
   }
 
   function applyAnswerResult(answer, response) {

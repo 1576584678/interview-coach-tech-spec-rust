@@ -309,9 +309,13 @@ pub async fn start(state: &SharedState, req: StartRequest) -> AppResult<StartRes
     })
 }
 
-/// 回答前的准备:写入答案、判断是否还有下一题、拼好下一题的 prompt。
+/// 一次回答的准备结果:需要生成下一题时返回 Some,已是最后一题时返回 None(此时答案已落库)。
 pub struct AnswerPlan {
     pub session_id: u64,
+    /// 本次回答对应的题号;提交时用来确认状态没有被并发推进过。
+    pub answered_order: i32,
+    /// 本次回答的正文,提交成功时才会写入本地数据。
+    pub answer: String,
     pub next_order: i32,
     pub next_type: String,
     pub is_last: bool,
@@ -319,7 +323,11 @@ pub struct AnswerPlan {
     pub history: Vec<ChatMessage>,
 }
 
-pub fn begin_answer(
+/// 第一步:校验当前题并准备好下一题的 prompt(不落库)。
+///
+/// 答案只有在大模型成功生成下一题后才由 `commit_answer` 写入,避免出现
+/// 「答案已存、下一题却没生成」的半完成状态把整场面试卡死。
+pub fn prepare_answer(
     state: &SharedState,
     session_id: u64,
     answer: Option<&str>,
@@ -331,53 +339,48 @@ pub fn begin_answer(
 
     let session = state
         .store
-        .write(|db| {
-            let session = db
-                .sessions
-                .iter_mut()
-                .find(|s| s.id == session_id)
-                .ok_or_else(|| AppError::not_found("面试会话不存在"))?;
-            if session.status != status::ONGOING {
-                return Err(AppError::business(code::INTERVIEW_FINISHED, "面试已结束"));
-            }
-            let order = {
-                let qa = session
-                    .qa_list
-                    .last_mut()
-                    .ok_or_else(|| AppError::internal("面试问答记录缺失"))?;
-                if qa.answer.is_some() {
-                    return Err(AppError::bad_request("当前题目已经回答过了"));
-                }
-                qa.answer = Some(raw.clone());
-                qa.answered_at = Some(now_iso());
-                qa.question_order
-            };
-            Ok((session.clone(), order))
-        })
-        .map(|(session, _)| session)?;
+        .read(|db| db.sessions.iter().find(|s| s.id == session_id).cloned())
+        .ok_or_else(|| AppError::not_found("面试会话不存在"))?;
+    if session.status != status::ONGOING {
+        return Err(AppError::business(code::INTERVIEW_FINISHED, "面试已结束"));
+    }
+    let last = session.last_qa().ok_or_else(|| AppError::internal("面试问答记录缺失"))?;
+    if last.answer.is_some() {
+        return Err(AppError::bad_request("当前题目已经回答过了"));
+    }
+    let current_order = last.question_order;
 
-    let current_order = session.last_qa().map(|qa| qa.question_order).unwrap_or(0);
+    // 已经是最后一题:不需要再问大模型,直接把答案落库
     if current_order >= session.total_questions {
+        store_answer(state, session_id, current_order, &raw)?;
         return Ok(None);
     }
 
     let weak_points = crate::analysis::weak_points(&state.store);
     let next_order = current_order + 1;
     let next_type = adaptive_question_type(next_order, &weak_points);
-    let history = history_messages(&session);
-    let vars = interviewer_vars(state, &session, &weak_points, &format_history(&history))?;
+    // 出题用的历史里要包含这一次的回答
+    let mut with_answer = session.clone();
+    if let Some(qa) = with_answer.last_qa_mut() {
+        qa.answer = Some(raw.clone());
+        qa.answered_at = Some(now_iso());
+    }
+    let history = history_messages(&with_answer);
+    let vars = interviewer_vars(state, &with_answer, &weak_points, &format_history(&history))?;
     Ok(Some(AnswerPlan {
         session_id,
+        answered_order: current_order,
+        answer: raw,
         next_order,
         next_type,
-        is_last: next_order >= session.total_questions,
+        is_last: next_order >= with_answer.total_questions,
         system_prompt: prompt::render(prompt_name::INTERVIEWER, &vars)?,
         history,
     }))
 }
 
-/// 把生成好的问题落库,返回给前端的响应。
-pub fn finish_answer(state: &SharedState, plan: &AnswerPlan, question: &str) -> AppResult<AnswerResponse> {
+/// 第二步:把「这次回答」与「AI 生成的新问题」一次性落库,保证两者同生共死。
+pub fn commit_answer(state: &SharedState, plan: &AnswerPlan, question: &str) -> AppResult<AnswerResponse> {
     let question = question.trim().to_string();
     if question.is_empty() {
         return Err(AppError::business(code::LLM_EMPTY, "生成下一题失败,请重试"));
@@ -388,6 +391,18 @@ pub fn finish_answer(state: &SharedState, plan: &AnswerPlan, question: &str) -> 
             .iter_mut()
             .find(|s| s.id == plan.session_id)
             .ok_or_else(|| AppError::not_found("面试会话不存在"))?;
+        if session.status != status::ONGOING {
+            return Err(AppError::business(code::INTERVIEW_FINISHED, "面试已结束"));
+        }
+        let Some(qa) = session.qa_list.last_mut() else {
+            return Err(AppError::internal("面试问答记录缺失"));
+        };
+        // 期间被其他请求推进过:拒绝提交,避免出现重复题目
+        if qa.answer.is_some() || qa.question_order != plan.answered_order {
+            return Err(AppError::bad_request("当前题目已经回答过了"));
+        }
+        qa.answer = Some(plan.answer.clone());
+        qa.answered_at = Some(now_iso());
         session.qa_list.push(InterviewQa {
             question_order: plan.next_order,
             question: question.clone(),
@@ -408,29 +423,57 @@ pub fn finish_answer(state: &SharedState, plan: &AnswerPlan, question: &str) -> 
     })
 }
 
+/// 最后一题(不需要下一题时)只落答案。
+fn store_answer(state: &SharedState, session_id: u64, order: i32, answer: &str) -> AppResult<()> {
+    state.store.write(|db| {
+        let session = db
+            .sessions
+            .iter_mut()
+            .find(|s| s.id == session_id)
+            .ok_or_else(|| AppError::not_found("面试会话不存在"))?;
+        if session.status != status::ONGOING {
+            return Err(AppError::business(code::INTERVIEW_FINISHED, "面试已结束"));
+        }
+        let Some(qa) = session.qa_list.last_mut() else {
+            return Err(AppError::internal("面试问答记录缺失"));
+        };
+        if qa.answer.is_some() || qa.question_order != order {
+            return Err(AppError::bad_request("当前题目已经回答过了"));
+        }
+        qa.answer = Some(answer.to_string());
+        qa.answered_at = Some(now_iso());
+        Ok(())
+    })
+}
+
+/// 「最后一题已答完、没有下一题」时返回给前端的收尾响应。
+pub fn answered_last(state: &SharedState, session_id: u64) -> AnswerResponse {
+    let (order, qa_type) = state.store.read(|db| {
+        db.sessions
+            .iter()
+            .find(|s| s.id == session_id)
+            .and_then(|s| s.last_qa().map(|qa| (qa.question_order, qa.question_type.clone())))
+            .unwrap_or((0, "open".to_string()))
+    });
+    AnswerResponse {
+        next_question: None,
+        question_type: qa_type,
+        question_order: order,
+        is_last: true,
+    }
+}
+
 /// 非流式回答当前问题。
 pub async fn answer(state: &SharedState, session_id: u64, answer: Option<&str>) -> AppResult<AnswerResponse> {
-    let Some(plan) = begin_answer(state, session_id, answer)? else {
-        let (order, qa_type) = state.store.read(|db| {
-            db.sessions
-                .iter()
-                .find(|s| s.id == session_id)
-                .and_then(|s| s.last_qa().map(|qa| (qa.question_order, qa.question_type.clone())))
-                .unwrap_or((0, "open".to_string()))
-        });
-        return Ok(AnswerResponse {
-            next_question: None,
-            question_type: qa_type,
-            question_order: order,
-            is_last: true,
-        });
+    let Some(plan) = prepare_answer(state, session_id, answer)? else {
+        return Ok(answered_last(state, session_id));
     };
 
     let llm = state.llm()?;
     let question = llm
         .chat(&plan.system_prompt, "请基于候选人的回答提出下一个问题。", &plan.history)
         .await?;
-    finish_answer(state, &plan, &question)
+    commit_answer(state, &plan, &question)
 }
 
 pub fn complete(state: &SharedState, session_id: u64) -> AppResult<()> {

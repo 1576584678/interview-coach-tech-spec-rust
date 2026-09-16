@@ -4,6 +4,7 @@ use axum::body::Body;
 use axum::http::{Request, StatusCode};
 use http_body_util::BodyExt;
 use interview_coach::config::{AppConfig, ConfigFile};
+use interview_coach::models::{InterviewQa, InterviewSession};
 use interview_coach::state::SharedState;
 use serde_json::Value;
 use tower::ServiceExt;
@@ -22,6 +23,37 @@ fn test_state(tag: &str) -> SharedState {
     config.server.auto_open_browser = false;
     let config_file = ConfigFile::new(dir.join("config.toml"));
     interview_coach::build_state(config_file, config).expect("初始化状态失败")
+}
+
+/// 一场「进行中」的面试(只有第 1 题,未作答),用于状态机相关的测试。
+fn sample_session(id: u64, total_questions: i32) -> InterviewSession {
+    InterviewSession {
+        id,
+        position: "Java后端".to_string(),
+        position_category: "backend".to_string(),
+        difficulty: "normal".to_string(),
+        interviewer_style: "friendly".to_string(),
+        mode: "normal".to_string(),
+        status: "ongoing".to_string(),
+        total_questions,
+        resume_id: None,
+        started_at: "2026-09-16 10:00:00".to_string(),
+        completed_at: None,
+        total_score: None,
+        review_status: None,
+        review_error: None,
+        review: None,
+        qa_list: vec![InterviewQa {
+            question_order: 1,
+            question: "请先做个自我介绍".to_string(),
+            question_type: "basic".to_string(),
+            answer: None,
+            answered_at: None,
+            score: None,
+            feedback: None,
+            better_answer: None,
+        }],
+    }
 }
 
 async fn get_json(state: SharedState, uri: &str) -> (StatusCode, Value) {
@@ -172,6 +204,74 @@ async fn config_can_be_updated_and_saved() {
     assert!(saved.exists(), "config.toml 未写入");
     let text = std::fs::read_to_string(&saved).unwrap();
     assert!(text.contains("sk-test-key-123456"));
+    // 测试用的临时 data-dir 属于进程级覆盖,不能写回 config.toml
+    assert!(
+        !text.contains("interview-coach-test-config"),
+        "临时 data-dir 被写进了 config.toml:\n{text}"
+    );
+    assert!(text.contains("data_dir = \"data\""), "config.toml 应保留文件基线里的 data_dir:\n{text}");
+    // 但设置页看到的仍是本进程实际生效的目录
+    let temp_data_dir = std::env::temp_dir().join("interview-coach-test-config");
+    assert_eq!(config["data"]["dataDir"], temp_data_dir.display().to_string());
+}
+
+/// 大模型失败时不能把答案提前落库,否则这一场面试会永久卡死(修复前的缺陷)。
+#[tokio::test]
+async fn llm_failure_keeps_current_question_answerable() {
+    let state = test_state("answer-retry");
+    state
+        .store
+        .write(|db| {
+            let id = db.next_id();
+            db.sessions.push(sample_session(id, 11));
+            Ok(())
+        })
+        .unwrap();
+
+    let session_id = 1;
+    for (label, answer) in [("作答", Some("我有五年 Java 经验")), ("重试", Some("我有五年 Java 经验")), ("跳题", None)] {
+        let result = interview_coach::interview_service::answer(&state, session_id, answer).await;
+        let err = result.expect_err("未配置大模型时应当失败");
+        assert_eq!(
+            err.code(),
+            interview_coach::error::code::CONFIG_ERROR,
+            "{label} 应因大模型不可用而失败,而不是返回其他错误"
+        );
+    }
+
+    state.store.read(|db| {
+        let session = &db.sessions[0];
+        assert_eq!(session.qa_list.len(), 1, "失败时不应写入新题目");
+        assert!(session.qa_list[0].answer.is_none(), "失败时不应写入答案");
+        assert!(session.qa_list[0].answered_at.is_none());
+    });
+}
+
+/// 复盘任务只活在内存里:进程中途退出会在盘上留下 processing,重启时必须复位。
+#[tokio::test]
+async fn stale_review_processing_is_reset_on_startup() {
+    let dir = temp_dir("stale-review");
+    let mut session = sample_session(1, 1);
+    session.status = "completed".to_string();
+    session.completed_at = Some("2026-09-16 10:05:00".to_string());
+    session.review_status = Some("processing".to_string());
+    session.qa_list[0].answer = Some("我有五年经验".to_string());
+    std::fs::write(
+        dir.join(interview_coach::DATA_FILE),
+        serde_json::json!({ "seq": 1, "sessions": [session], "resumes": [] }).to_string(),
+    )
+    .unwrap();
+
+    let mut config = AppConfig::default();
+    config.server.data_dir = dir.display().to_string();
+    let state = interview_coach::build_state(ConfigFile::new(dir.join("config.toml")), config)
+        .expect("初始化状态失败");
+
+    // 复位之后 /result 才会重新触发复盘,否则前端会永远停在「复盘生成中…」
+    state.store.read(|db| {
+        assert_eq!(db.sessions[0].review_status, None, "重启后应复位遗留的 processing 状态");
+        assert_eq!(db.sessions[0].review_error, None);
+    });
 }
 
 async fn post_update(state: SharedState) -> (StatusCode, Value) {

@@ -97,7 +97,12 @@ pub async fn upload(
                 let data = field
                     .bytes()
                     .await
-                    .map_err(|e| AppError::bad_request(format!("读取文件内容失败: {e}")))?;
+                    .map_err(|e| {
+                        AppError::bad_request(format!(
+                            "读取上传文件失败: {e}(单个文件最大 {}MB)",
+                            crate::file_parser::MAX_FILE_SIZE / 1024 / 1024
+                        ))
+                    })?;
                 file_bytes = Some(data.to_vec());
             }
             "targetPosition" => {
