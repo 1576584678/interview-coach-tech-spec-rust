@@ -1,0 +1,4 @@
+general:输出通用求职简历：重点清晰、动词开头、避免套话、每条经历尽量量化。
+bigtech:输出大厂技术岗简历：突出技术深度、系统复杂度、性能指标、跨团队协作、稳定性与工程效率；使用工程师可验证的技术细节。
+foreign:输出外企简历：使用简洁专业表达，突出 ownership、business impact、cross-functional collaboration、data-driven results；避免中式空泛描述。
+state-owned:输出国企/央企简历：稳重规范，突出岗位职责、组织协作、政策或项目支撑、可靠性、荣誉与成果；避免夸张表达。

@@ -1,0 +1,653 @@
+[
+  {
+    "category": "backend",
+    "questionType": "basic",
+    "question": "请解释 JVM 的内存区域划分,以及哪些区域可能发生 OutOfMemoryError。",
+    "answerPoints": "运行时数据区划分;OOM 场景与排查思路",
+    "difficulty": "normal"
+  },
+  {
+    "category": "backend",
+    "questionType": "basic",
+    "question": "HashMap 在 JDK 1.8 中的底层数据结构是怎样的?为什么链表长度超过 8 会转红黑树?",
+    "answerPoints": "数组+链表+红黑树;树化阈值与退化;哈希冲突",
+    "difficulty": "normal"
+  },
+  {
+    "category": "backend",
+    "questionType": "basic",
+    "question": "谈谈 MySQL 事务的隔离级别,InnoDB 默认级别下可能出现什么问题,如何解决?",
+    "answerPoints": "四个隔离级别;MVCC;间隙锁与幻读",
+    "difficulty": "normal"
+  },
+  {
+    "category": "backend",
+    "questionType": "basic",
+    "question": "描述 TCP 三次握手与四次挥手的过程,为什么挥手需要四次?",
+    "answerPoints": "连接状态机;TIME_WAIT 意义;半关闭",
+    "difficulty": "normal"
+  },
+  {
+    "category": "backend",
+    "questionType": "project",
+    "question": "介绍一个你主导的高并发项目,你是如何做容量评估和压测的?",
+    "answerPoints": "QPS/RT 估算;压测方案;瓶颈定位",
+    "difficulty": "normal"
+  },
+  {
+    "category": "backend",
+    "questionType": "project",
+    "question": "项目中遇到过最棘手的性能问题是什么?讲讲你的定位和解决过程。",
+    "answerPoints": "监控/日志/链路追踪排查链路;优化前后指标",
+    "difficulty": "normal"
+  },
+  {
+    "category": "backend",
+    "questionType": "project",
+    "question": "你的项目里缓存是如何设计的?如何保证缓存与数据库的一致性?",
+    "answerPoints": "缓存穿透/击穿/雪崩;延迟双删;过期策略",
+    "difficulty": "normal"
+  },
+  {
+    "category": "backend",
+    "questionType": "deep",
+    "question": "设计一个短链接服务,要求支撑千万级日活,你会怎么做?",
+    "answerPoints": "发号器;301/302 选择;布隆过滤器;分片",
+    "difficulty": "hard"
+  },
+  {
+    "category": "backend",
+    "questionType": "deep",
+    "question": "如果让你设计一个秒杀系统,如何应对瞬时流量洪峰?",
+    "answerPoints": "削峰填谷;多级限流;库存预扣;异步下单",
+    "difficulty": "hard"
+  },
+  {
+    "category": "backend",
+    "questionType": "deep",
+    "question": "分布式锁有哪些实现方式?各自的优缺点是什么?",
+    "answerPoints": "Redis/Redisson;ZK 临时顺序节点;数据库;RedLock 争议",
+    "difficulty": "hard"
+  },
+  {
+    "category": "backend",
+    "questionType": "deep",
+    "question": "消息队列如何保证消息不丢失、不重复消费?",
+    "answerPoints": "生产端确认;broker 持久化;消费幂等",
+    "difficulty": "normal"
+  },
+  {
+    "category": "backend",
+    "questionType": "open",
+    "question": "你未来 3 年的技术发展规划是什么?",
+    "answerPoints": "成长路径;深度与广度权衡",
+    "difficulty": "easy"
+  },
+  {
+    "category": "frontend",
+    "questionType": "basic",
+    "question": "说说浏览器从输入 URL 到页面渲染完成的完整过程。",
+    "answerPoints": "DNS/TCP/HTTP;关键渲染路径;性能优化切入点",
+    "difficulty": "normal"
+  },
+  {
+    "category": "frontend",
+    "questionType": "basic",
+    "question": "讲讲 JavaScript 事件循环机制,宏任务和微任务的执行顺序是怎样的?",
+    "answerPoints": "Event Loop;Promise/queueMicrotask;渲染时机",
+    "difficulty": "normal"
+  },
+  {
+    "category": "frontend",
+    "questionType": "basic",
+    "question": "谈谈闭包及其应用场景,什么情况下会导致内存泄漏?",
+    "answerPoints": "作用域链;常见泄漏场景;排查工具",
+    "difficulty": "normal"
+  },
+  {
+    "category": "frontend",
+    "questionType": "basic",
+    "question": "CSS 盒模型与 BFC 是什么?BFC 能解决哪些布局问题?",
+    "answerPoints": "标准/怪异盒模型;BFC 触发条件;边距折叠/清浮动",
+    "difficulty": "normal"
+  },
+  {
+    "category": "frontend",
+    "questionType": "project",
+    "question": "介绍你做过的性能优化案例,首屏时间优化了多少,是怎么度量的?",
+    "answerPoints": "LCP/FCP 指标;Lighthouse;具体优化手段",
+    "difficulty": "normal"
+  },
+  {
+    "category": "frontend",
+    "questionType": "project",
+    "question": "你在项目中如何做组件设计与状态管理选型?",
+    "answerPoints": "组件粒度划分;props/状态边界;选型依据",
+    "difficulty": "normal"
+  },
+  {
+    "category": "frontend",
+    "questionType": "project",
+    "question": "讲一个你解决过的线上疑难 bug,完整还原一下定位过程。",
+    "answerPoints": "错误监控;断点/日志/回放;根因分析",
+    "difficulty": "normal"
+  },
+  {
+    "category": "frontend",
+    "questionType": "deep",
+    "question": "如何设计一个前端埋点与错误监控体系?",
+    "answerPoints": "错误捕获方式;采样与上报;性能指标采集",
+    "difficulty": "hard"
+  },
+  {
+    "category": "frontend",
+    "questionType": "deep",
+    "question": "虚拟列表如何支撑百万级数据的流畅滚动?",
+    "answerPoints": "视口计算;DOM 复用;预估高度与动态高度",
+    "difficulty": "hard"
+  },
+  {
+    "category": "frontend",
+    "questionType": "deep",
+    "question": "微前端方案(如 qiankun)的原理是什么?落地时踩过哪些坑?",
+    "answerPoints": "沙箱隔离;样式隔离;公共依赖;应用通信",
+    "difficulty": "hard"
+  },
+  {
+    "category": "frontend",
+    "questionType": "deep",
+    "question": "SSR 与 CSR 如何选型?混合渲染方案怎么做?",
+    "answerPoints": "首屏/SEO 需求;水合成本;同构降级",
+    "difficulty": "normal"
+  },
+  {
+    "category": "frontend",
+    "questionType": "open",
+    "question": "你怎么看 AI 编码工具对前端开发模式的影响?",
+    "answerPoints": "工程效率变化;个人成长策略",
+    "difficulty": "easy"
+  },
+  {
+    "category": "product",
+    "questionType": "basic",
+    "question": "你如何做需求优先级排序?常用哪些方法?",
+    "answerPoints": "RICE/KANO;价值与成本;资源约束",
+    "difficulty": "normal"
+  },
+  {
+    "category": "product",
+    "questionType": "basic",
+    "question": "一份好的需求文档应该包含哪些部分?你的 PRD 结构是什么?",
+    "answerPoints": "背景/目标/流程/边界;验收标准",
+    "difficulty": "normal"
+  },
+  {
+    "category": "product",
+    "questionType": "basic",
+    "question": "怎么理解用户需求与产品需求的区别?",
+    "answerPoints": "表面诉求与底层动机;场景化思考",
+    "difficulty": "normal"
+  },
+  {
+    "category": "product",
+    "questionType": "project",
+    "question": "介绍一个你从 0 到 1 负责的功能,核心指标提升了多少?",
+    "answerPoints": "目标定义;迭代节奏;数据验证",
+    "difficulty": "normal"
+  },
+  {
+    "category": "product",
+    "questionType": "project",
+    "question": "讲一次你推动跨部门协作的经历,出现冲突时你是怎么解决的?",
+    "answerPoints": "利益对齐;沟通方法;推动机制",
+    "difficulty": "normal"
+  },
+  {
+    "category": "product",
+    "questionType": "project",
+    "question": "一个上线后数据不达预期的功能,你是怎么分析和处理的?",
+    "answerPoints": "归因拆解;迭代 or 下线决策",
+    "difficulty": "normal"
+  },
+  {
+    "category": "product",
+    "questionType": "deep",
+    "question": "如果产品 DAU 下降了 10%,你会怎么排查?",
+    "answerPoints": "新老用户拆解;渠道/版本/留存维度;外部因素",
+    "difficulty": "hard"
+  },
+  {
+    "category": "product",
+    "questionType": "deep",
+    "question": "如何为一个新产品冷启动设计增长策略?",
+    "answerPoints": "种子用户;北极星指标;增长回路",
+    "difficulty": "hard"
+  },
+  {
+    "category": "product",
+    "questionType": "deep",
+    "question": "如何平衡商业化与用户体验?",
+    "answerPoints": "度量体系;分级策略;长期价值",
+    "difficulty": "normal"
+  },
+  {
+    "category": "product",
+    "questionType": "deep",
+    "question": "怎么用 A/B 测试验证一个功能?需要特别注意什么?",
+    "answerPoints": "假设设定;样本量与显著性;护栏指标",
+    "difficulty": "normal"
+  },
+  {
+    "category": "product",
+    "questionType": "open",
+    "question": "你认为 AI 产品经理与传统产品经理最大的区别是什么?",
+    "answerPoints": "技术理解;数据驱动;交互范式变化",
+    "difficulty": "easy"
+  },
+  {
+    "category": "product",
+    "questionType": "open",
+    "question": "说一款你最喜欢的产品,从产品角度分析它成功的原因。",
+    "answerPoints": "用户价值;差异化;商业闭环",
+    "difficulty": "easy"
+  },
+  {
+    "category": "data",
+    "questionType": "basic",
+    "question": "SQL 窗口函数有哪些?举一个你在业务分析中的实际使用场景。",
+    "answerPoints": "排序/聚合/位移窗口;分组统计场景",
+    "difficulty": "normal"
+  },
+  {
+    "category": "data",
+    "questionType": "basic",
+    "question": "LEFT JOIN 与 INNER JOIN 的区别?多表关联时数据膨胀怎么处理?",
+    "answerPoints": "关联语义;一对多膨胀;去重口径",
+    "difficulty": "normal"
+  },
+  {
+    "category": "data",
+    "questionType": "basic",
+    "question": "常见的统计陷阱有哪些?相关性和因果性有什么区别?",
+    "answerPoints": "辛普森悖论;幸存者偏差;辛普森/均值陷阱",
+    "difficulty": "normal"
+  },
+  {
+    "category": "data",
+    "questionType": "project",
+    "question": "介绍一个你做过的最有价值的数据分析项目,结论如何驱动业务?",
+    "answerPoints": "分析框架;结论落地;业务收益量化",
+    "difficulty": "normal"
+  },
+  {
+    "category": "data",
+    "questionType": "project",
+    "question": "面对口径不一致的数据,你会怎么建立数据质量体系?",
+    "answerPoints": "口径字典;校验规则;监控告警",
+    "difficulty": "normal"
+  },
+  {
+    "category": "data",
+    "questionType": "deep",
+    "question": "如何为一个业务设计指标体系来衡量健康度?",
+    "answerPoints": "北极星指标;OSM 模型;指标分级",
+    "difficulty": "hard"
+  },
+  {
+    "category": "data",
+    "questionType": "deep",
+    "question": "老板让你分析\"为什么 GMV 下滑\",你的分析框架是什么?",
+    "answerPoints": "拆解维度(量价/品类/渠道);假设树;数据验证",
+    "difficulty": "hard"
+  },
+  {
+    "category": "data",
+    "questionType": "deep",
+    "question": "AARRR 模型各环节你会关注哪些关键指标?",
+    "answerPoints": "获客/激活/留存/变现/传播指标;漏斗转化",
+    "difficulty": "normal"
+  },
+  {
+    "category": "data",
+    "questionType": "open",
+    "question": "你如何看待 AI 对数据分析岗位的影响?",
+    "answerPoints": "工具提效;能力重心迁移",
+    "difficulty": "easy"
+  },
+  {
+    "category": "design",
+    "questionType": "basic",
+    "question": "讲讲你的设计流程,从接到需求到最终交付是怎样的?",
+    "answerPoints": "需求澄清;竞品分析;方案评审;走查",
+    "difficulty": "normal"
+  },
+  {
+    "category": "design",
+    "questionType": "basic",
+    "question": "你如何做设计走查与开发还原度把控?",
+    "answerPoints": "走查清单;标注规范;协作流程",
+    "difficulty": "normal"
+  },
+  {
+    "category": "design",
+    "questionType": "project",
+    "question": "介绍你作品集中最有代表性的项目,当时的设计决策依据是什么?",
+    "answerPoints": "用户洞察;数据验证;权衡取舍",
+    "difficulty": "normal"
+  },
+  {
+    "category": "design",
+    "questionType": "deep",
+    "question": "如何平衡用户体验、商业目标与技术约束?",
+    "answerPoints": "优先级判断;度量;沟通策略",
+    "difficulty": "normal"
+  },
+  {
+    "category": "design",
+    "questionType": "deep",
+    "question": "怎么做设计规范(Design System)?过程中遇到过什么问题?",
+    "answerPoints": "组件抽象;一致性;维护机制",
+    "difficulty": "normal"
+  },
+  {
+    "category": "design",
+    "questionType": "open",
+    "question": "你平时如何获取设计灵感、保持专业成长?",
+    "answerPoints": "学习方法;社区沉淀",
+    "difficulty": "easy"
+  },
+  {
+    "category": "operation",
+    "questionType": "basic",
+    "question": "你如何策划一场完整的活动?关键节点有哪些?",
+    "answerPoints": "目标-方案-资源-执行-复盘;风险预案",
+    "difficulty": "normal"
+  },
+  {
+    "category": "operation",
+    "questionType": "basic",
+    "question": "怎么理解拉新、促活、留存、转化之间的关系?",
+    "answerPoints": "AARRR 漏斗;用户生命周期",
+    "difficulty": "normal"
+  },
+  {
+    "category": "operation",
+    "questionType": "project",
+    "question": "讲一个你操盘过的爆款活动,数据表现如何?",
+    "answerPoints": "策略打法;数据结果;复盘沉淀",
+    "difficulty": "normal"
+  },
+  {
+    "category": "operation",
+    "questionType": "deep",
+    "question": "私域运营与公域运营的策略差异是什么?",
+    "answerPoints": "触达成本;信任关系;转化路径",
+    "difficulty": "normal"
+  },
+  {
+    "category": "operation",
+    "questionType": "deep",
+    "question": "让你负责一个新增渠道的 ROI 提升,你会怎么做?",
+    "answerPoints": "渠道拆解;投放优化;链路转化",
+    "difficulty": "hard"
+  },
+  {
+    "category": "operation",
+    "questionType": "open",
+    "question": "你怎么理解精细化运营?",
+    "answerPoints": "用户分层;个性化触达;数据驱动",
+    "difficulty": "easy"
+  },
+  {
+    "category": "agent",
+    "questionType": "basic",
+    "question": "请解释 LLM 的 Temperature、Top-p 采样参数对生成结果的影响,什么场景该调高或调低?",
+    "answerPoints": "随机性控制;确定性 vs 多样性;RAG/Agent 场景推荐值",
+    "difficulty": "normal"
+  },
+  {
+    "category": "agent",
+    "questionType": "basic",
+    "question": "什么是 Token?如何估算一次 API 调用的 Token 消耗和成本?",
+    "answerPoints": "Token 与字符的换算;上下文窗口;定价模型",
+    "difficulty": "easy"
+  },
+  {
+    "category": "agent",
+    "questionType": "basic",
+    "question": "Prompt Engineering 中有哪些常用技巧?举几个你实际用过的例子。",
+    "answerPoints": "Few-shot/CoT/角色设定;结构化输出约束;迭代调优",
+    "difficulty": "normal"
+  },
+  {
+    "category": "agent",
+    "questionType": "basic",
+    "question": "什么是 RAG(检索增强生成)?它解决了 LLM 的哪些局限性?",
+    "answerPoints": "幻觉问题;知识时效性;私有数据接入;检索-生成流程",
+    "difficulty": "normal"
+  },
+  {
+    "category": "agent",
+    "questionType": "project",
+    "question": "介绍一个你开发过的 AI Agent 项目,它的架构是怎样的?遇到了什么挑战?",
+    "answerPoints": "架构选型;工具编排;记忆管理;落地效果",
+    "difficulty": "normal"
+  },
+  {
+    "category": "agent",
+    "questionType": "project",
+    "question": "你在 RAG 系统中如何做文档切分和向量检索优化?召回率怎么提升?",
+    "answerPoints": "切分策略;Embedding 选型;混合检索;Rerank",
+    "difficulty": "normal"
+  },
+  {
+    "category": "agent",
+    "questionType": "project",
+    "question": "描述一次你调试 LLM 输出不稳定的经历,最终怎么解决的?",
+    "answerPoints": "Prompt 版本管理;输出解析兜底;评测集回归",
+    "difficulty": "normal"
+  },
+  {
+    "category": "agent",
+    "questionType": "deep",
+    "question": "设计一个多 Agent 协作系统(如 Planner-Executor-Critic),你会怎么编排?",
+    "answerPoints": "角色分工;消息传递;状态机;错误恢复;死锁规避",
+    "difficulty": "hard"
+  },
+  {
+    "category": "agent",
+    "questionType": "deep",
+    "question": "Function Calling / Tool Use 的实现原理是什么?如何保证 Agent 调用工具的可靠性?",
+    "answerPoints": "Schema 定义;参数提取;错误重试;幻觉调用防护",
+    "difficulty": "hard"
+  },
+  {
+    "category": "agent",
+    "questionType": "deep",
+    "question": "如何评估一个 RAG 系统的质量?你会设计哪些评测指标?",
+    "answerPoints": "检索召回率/精确率;生成忠实度/相关性;端到端评测框架",
+    "difficulty": "hard"
+  },
+  {
+    "category": "agent",
+    "questionType": "deep",
+    "question": "Agent 的记忆机制怎么设计?短期记忆和长期记忆分别用什么方案?",
+    "answerPoints": "上下文窗口 vs 向量数据库;摘要压缩;记忆检索与遗忘",
+    "difficulty": "hard"
+  },
+  {
+    "category": "agent",
+    "questionType": "open",
+    "question": "你认为 AI Agent 目前最大的技术瓶颈是什么?未来 1-2 年会有什么突破?",
+    "answerPoints": "规划能力;长程任务;可靠性;成本",
+    "difficulty": "easy"
+  },
+  {
+    "category": "devops",
+    "questionType": "basic",
+    "question": "Docker 的镜像分层原理是什么?如何有效减小镜像体积?",
+    "answerPoints": "联合文件系统;多阶段构建;.dockerignore;基础镜像选择",
+    "difficulty": "normal"
+  },
+  {
+    "category": "devops",
+    "questionType": "basic",
+    "question": "Kubernetes 中 Pod、Deployment、Service 各自的作用是什么?它们的关系是怎样的?",
+    "answerPoints": "最小调度单元;声明式扩缩容;网络抽象与负载均衡",
+    "difficulty": "normal"
+  },
+  {
+    "category": "devops",
+    "questionType": "basic",
+    "question": "说说你对 CI/CD 的理解,你们团队的流水线是怎么设计的?",
+    "answerPoints": "代码提交-构建-测试-部署;自动化门禁;灰度发布",
+    "difficulty": "normal"
+  },
+  {
+    "category": "devops",
+    "questionType": "basic",
+    "question": "Linux 中如何排查一个服务 CPU 占用过高的问题?说说你的排查思路。",
+    "answerPoints": "top/pidstat;perf/flame graph;线程分析;GC 排查",
+    "difficulty": "normal"
+  },
+  {
+    "category": "devops",
+    "questionType": "project",
+    "question": "介绍一次你处理过的线上故障,从发现到恢复的完整过程。",
+    "answerPoints": "监控发现;影响评估;止血;根因分析;复盘改进",
+    "difficulty": "normal"
+  },
+  {
+    "category": "devops",
+    "questionType": "project",
+    "question": "你做过哪些基础设施自动化改造?效果如何?",
+    "answerPoints": "IaC 选型;脚本/Ansible/Terraform;幂等性;收益量化",
+    "difficulty": "normal"
+  },
+  {
+    "category": "devops",
+    "questionType": "project",
+    "question": "描述你们团队的监控体系,覆盖了哪些维度?有哪些告警策略?",
+    "answerPoints": "指标/日志/链路追踪;告警分级;降噪;SLO",
+    "difficulty": "normal"
+  },
+  {
+    "category": "devops",
+    "questionType": "deep",
+    "question": "如何设计一个高可用的 Kubernetes 生产集群?需要考虑哪些方面?",
+    "answerPoints": "多可用区;资源调度;网络策略;存储方案;安全加固",
+    "difficulty": "hard"
+  },
+  {
+    "category": "devops",
+    "questionType": "deep",
+    "question": "蓝绿部署、金丝雀发布、滚动更新的区别是什么?各自适合什么场景?",
+    "answerPoints": "流量切换策略;回滚速度;风险控制;数据兼容",
+    "difficulty": "normal"
+  },
+  {
+    "category": "devops",
+    "questionType": "deep",
+    "question": "如何做容器化环境下的日志收集与集中分析?",
+    "answerPoints": "DaemonSet/边车采集;EFK/PLG 技术栈;日志分级与采样",
+    "difficulty": "normal"
+  },
+  {
+    "category": "devops",
+    "questionType": "deep",
+    "question": "如果生产环境数据库主从延迟严重,你会怎么排查和解决?",
+    "answerPoints": "大事务;网络;硬件;读写分离策略;补偿机制",
+    "difficulty": "hard"
+  },
+  {
+    "category": "devops",
+    "questionType": "open",
+    "question": "你怎么看待 GitOps 和传统 CI/CD 的区别?会取代传统模式吗?",
+    "answerPoints": "声明式;Git 作为唯一真相源;漂移检测;适用场景",
+    "difficulty": "easy"
+  },
+  {
+    "category": "web3",
+    "questionType": "basic",
+    "question": "请解释区块链的核心概念:区块、链、共识机制分别是什么?",
+    "answerPoints": "区块结构;哈希链接;PoW/PoS/DPoS;拜占庭容错",
+    "difficulty": "normal"
+  },
+  {
+    "category": "web3",
+    "questionType": "basic",
+    "question": "智能合约是什么?以太坊上的智能合约用什么语言编写?有什么特点?",
+    "answerPoints": "EVM;Solidity/Vyper;不可变部署;Gas 机制",
+    "difficulty": "normal"
+  },
+  {
+    "category": "web3",
+    "questionType": "basic",
+    "question": "什么是 Gas Fee?为什么 Gas Price 会波动?如何优化 Gas 成本?",
+    "answerPoints": "Gas 计算;EIP-1559;Layer2 降费;合约优化",
+    "difficulty": "normal"
+  },
+  {
+    "category": "web3",
+    "questionType": "basic",
+    "question": "公钥、私钥和地址的关系是什么?钱包是如何管理密钥的?",
+    "answerPoints": "椭圆曲线;派生路径;HD 钱包;助记词",
+    "difficulty": "normal"
+  },
+  {
+    "category": "web3",
+    "questionType": "project",
+    "question": "介绍一个你开发过的智能合约或 DApp 项目,架构和核心逻辑是什么?",
+    "answerPoints": "合约设计;前端交互;事件监听;状态管理",
+    "difficulty": "normal"
+  },
+  {
+    "category": "web3",
+    "questionType": "project",
+    "question": "你做过智能合约安全审计吗?发现过哪些常见漏洞?",
+    "answerPoints": "重入;整数溢出;权限控制;闪电贷攻击",
+    "difficulty": "normal"
+  },
+  {
+    "category": "web3",
+    "questionType": "project",
+    "question": "描述一次你处理的链上异常或合约升级经历。",
+    "answerPoints": "代理合约;数据迁移;时间锁;社区沟通",
+    "difficulty": "normal"
+  },
+  {
+    "category": "web3",
+    "questionType": "deep",
+    "question": "请解释 ERC-20、ERC-721、ERC-1155 的区别,各自适合什么场景?",
+    "answerPoints": "同质化/非同质化/半同质化;批量转账;应用场景",
+    "difficulty": "normal"
+  },
+  {
+    "category": "web3",
+    "questionType": "deep",
+    "question": "Layer 2 扩容方案有哪些(rollup/plasma/state channel)?各自的原理和取舍是什么?",
+    "answerPoints": "Optimistic/ZK Rollup;数据可用性;退出机制;最终性",
+    "difficulty": "hard"
+  },
+  {
+    "category": "web3",
+    "questionType": "deep",
+    "question": "DeFi 中的 AMM(自动做市商)原理是什么?无常损失是怎么产生的?",
+    "answerPoints": "恒定乘积公式;流动性池;价格滑点;对冲策略",
+    "difficulty": "hard"
+  },
+  {
+    "category": "web3",
+    "questionType": "deep",
+    "question": "如何设计一个安全的智能合约升级方案?有哪些常见的代理模式?",
+    "answerPoints": "EIP-1967 透明代理;UUPS;Beacon;钻石标准;存储碰撞",
+    "difficulty": "hard"
+  },
+  {
+    "category": "web3",
+    "questionType": "open",
+    "question": "你怎么看 Web3 行业的发展趋势?哪些赛道你最看好?",
+    "answerPoints": "应用落地;监管;技术成熟度;可持续模型",
+    "difficulty": "easy"
+  }
+]

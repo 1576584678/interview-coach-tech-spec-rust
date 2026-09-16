@@ -1,0 +1,1172 @@
+[
+  {
+    "position": "Java后端",
+    "category": "backend",
+    "cityTier": "tier1",
+    "experienceLevel": "junior",
+    "p25": 12000,
+    "p50": 15000,
+    "p75": 18000,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "Java后端",
+    "category": "backend",
+    "cityTier": "tier1",
+    "experienceLevel": "mid",
+    "p25": 18000,
+    "p50": 24000,
+    "p75": 30000,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "Java后端",
+    "category": "backend",
+    "cityTier": "tier1",
+    "experienceLevel": "senior",
+    "p25": 30000,
+    "p50": 38000,
+    "p75": 50000,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "Java后端",
+    "category": "backend",
+    "cityTier": "new_tier1",
+    "experienceLevel": "junior",
+    "p25": 9500,
+    "p50": 12000,
+    "p75": 14500,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "Java后端",
+    "category": "backend",
+    "cityTier": "new_tier1",
+    "experienceLevel": "mid",
+    "p25": 14500,
+    "p50": 19000,
+    "p75": 24000,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "Java后端",
+    "category": "backend",
+    "cityTier": "new_tier1",
+    "experienceLevel": "senior",
+    "p25": 24000,
+    "p50": 30000,
+    "p75": 40000,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "Java后端",
+    "category": "backend",
+    "cityTier": "tier2",
+    "experienceLevel": "junior",
+    "p25": 8000,
+    "p50": 10000,
+    "p75": 12000,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "Java后端",
+    "category": "backend",
+    "cityTier": "tier2",
+    "experienceLevel": "mid",
+    "p25": 12000,
+    "p50": 15500,
+    "p75": 19500,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "Java后端",
+    "category": "backend",
+    "cityTier": "tier2",
+    "experienceLevel": "senior",
+    "p25": 19500,
+    "p50": 25000,
+    "p75": 32500,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "前端开发",
+    "category": "frontend",
+    "cityTier": "tier1",
+    "experienceLevel": "junior",
+    "p25": 11000,
+    "p50": 14000,
+    "p75": 17000,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "前端开发",
+    "category": "frontend",
+    "cityTier": "tier1",
+    "experienceLevel": "mid",
+    "p25": 17000,
+    "p50": 23000,
+    "p75": 28000,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "前端开发",
+    "category": "frontend",
+    "cityTier": "tier1",
+    "experienceLevel": "senior",
+    "p25": 28000,
+    "p50": 35000,
+    "p75": 45000,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "前端开发",
+    "category": "frontend",
+    "cityTier": "new_tier1",
+    "experienceLevel": "junior",
+    "p25": 9000,
+    "p50": 11000,
+    "p75": 13500,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "前端开发",
+    "category": "frontend",
+    "cityTier": "new_tier1",
+    "experienceLevel": "mid",
+    "p25": 13500,
+    "p50": 18500,
+    "p75": 22500,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "前端开发",
+    "category": "frontend",
+    "cityTier": "new_tier1",
+    "experienceLevel": "senior",
+    "p25": 22500,
+    "p50": 28000,
+    "p75": 36000,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "前端开发",
+    "category": "frontend",
+    "cityTier": "tier2",
+    "experienceLevel": "junior",
+    "p25": 7000,
+    "p50": 9000,
+    "p75": 11000,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "前端开发",
+    "category": "frontend",
+    "cityTier": "tier2",
+    "experienceLevel": "mid",
+    "p25": 11000,
+    "p50": 15000,
+    "p75": 18000,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "前端开发",
+    "category": "frontend",
+    "cityTier": "tier2",
+    "experienceLevel": "senior",
+    "p25": 18000,
+    "p50": 22500,
+    "p75": 29000,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "Python后端",
+    "category": "backend",
+    "cityTier": "tier1",
+    "experienceLevel": "junior",
+    "p25": 10000,
+    "p50": 13000,
+    "p75": 16000,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "Python后端",
+    "category": "backend",
+    "cityTier": "tier1",
+    "experienceLevel": "mid",
+    "p25": 16000,
+    "p50": 22000,
+    "p75": 27000,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "Python后端",
+    "category": "backend",
+    "cityTier": "tier1",
+    "experienceLevel": "senior",
+    "p25": 27000,
+    "p50": 34000,
+    "p75": 45000,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "Python后端",
+    "category": "backend",
+    "cityTier": "new_tier1",
+    "experienceLevel": "junior",
+    "p25": 8000,
+    "p50": 10500,
+    "p75": 13000,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "Python后端",
+    "category": "backend",
+    "cityTier": "new_tier1",
+    "experienceLevel": "mid",
+    "p25": 13000,
+    "p50": 17500,
+    "p75": 21500,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "Python后端",
+    "category": "backend",
+    "cityTier": "new_tier1",
+    "experienceLevel": "senior",
+    "p25": 21500,
+    "p50": 27000,
+    "p75": 36000,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "Python后端",
+    "category": "backend",
+    "cityTier": "tier2",
+    "experienceLevel": "junior",
+    "p25": 6500,
+    "p50": 8500,
+    "p75": 10500,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "Python后端",
+    "category": "backend",
+    "cityTier": "tier2",
+    "experienceLevel": "mid",
+    "p25": 10500,
+    "p50": 14000,
+    "p75": 17500,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "Python后端",
+    "category": "backend",
+    "cityTier": "tier2",
+    "experienceLevel": "senior",
+    "p25": 17500,
+    "p50": 22000,
+    "p75": 29000,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "算法工程师",
+    "category": "backend",
+    "cityTier": "tier1",
+    "experienceLevel": "junior",
+    "p25": 18000,
+    "p50": 25000,
+    "p75": 35000,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "算法工程师",
+    "category": "backend",
+    "cityTier": "tier1",
+    "experienceLevel": "mid",
+    "p25": 30000,
+    "p50": 40000,
+    "p75": 55000,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "算法工程师",
+    "category": "backend",
+    "cityTier": "tier1",
+    "experienceLevel": "senior",
+    "p25": 50000,
+    "p50": 70000,
+    "p75": 90000,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "算法工程师",
+    "category": "backend",
+    "cityTier": "new_tier1",
+    "experienceLevel": "junior",
+    "p25": 14500,
+    "p50": 20000,
+    "p75": 28000,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "算法工程师",
+    "category": "backend",
+    "cityTier": "new_tier1",
+    "experienceLevel": "mid",
+    "p25": 24000,
+    "p50": 32000,
+    "p75": 44000,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "算法工程师",
+    "category": "backend",
+    "cityTier": "new_tier1",
+    "experienceLevel": "senior",
+    "p25": 40000,
+    "p50": 56000,
+    "p75": 72000,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "算法工程师",
+    "category": "backend",
+    "cityTier": "tier2",
+    "experienceLevel": "junior",
+    "p25": 12000,
+    "p50": 16000,
+    "p75": 22500,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "算法工程师",
+    "category": "backend",
+    "cityTier": "tier2",
+    "experienceLevel": "mid",
+    "p25": 19500,
+    "p50": 26000,
+    "p75": 35500,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "算法工程师",
+    "category": "backend",
+    "cityTier": "tier2",
+    "experienceLevel": "senior",
+    "p25": 32500,
+    "p50": 45000,
+    "p75": 58500,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "测试工程师",
+    "category": "backend",
+    "cityTier": "tier1",
+    "experienceLevel": "junior",
+    "p25": 9000,
+    "p50": 11000,
+    "p75": 14000,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "测试工程师",
+    "category": "backend",
+    "cityTier": "tier1",
+    "experienceLevel": "mid",
+    "p25": 14000,
+    "p50": 18000,
+    "p75": 22000,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "测试工程师",
+    "category": "backend",
+    "cityTier": "tier1",
+    "experienceLevel": "senior",
+    "p25": 22000,
+    "p50": 28000,
+    "p75": 36000,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "测试工程师",
+    "category": "backend",
+    "cityTier": "new_tier1",
+    "experienceLevel": "junior",
+    "p25": 7000,
+    "p50": 9000,
+    "p75": 11000,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "测试工程师",
+    "category": "backend",
+    "cityTier": "new_tier1",
+    "experienceLevel": "mid",
+    "p25": 11000,
+    "p50": 14500,
+    "p75": 17500,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "测试工程师",
+    "category": "backend",
+    "cityTier": "new_tier1",
+    "experienceLevel": "senior",
+    "p25": 17500,
+    "p50": 22500,
+    "p75": 29000,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "测试工程师",
+    "category": "backend",
+    "cityTier": "tier2",
+    "experienceLevel": "junior",
+    "p25": 6000,
+    "p50": 7000,
+    "p75": 9000,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "测试工程师",
+    "category": "backend",
+    "cityTier": "tier2",
+    "experienceLevel": "mid",
+    "p25": 9000,
+    "p50": 11500,
+    "p75": 14500,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "测试工程师",
+    "category": "backend",
+    "cityTier": "tier2",
+    "experienceLevel": "senior",
+    "p25": 14500,
+    "p50": 18000,
+    "p75": 23500,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "产品经理",
+    "category": "product",
+    "cityTier": "tier1",
+    "experienceLevel": "junior",
+    "p25": 10000,
+    "p50": 13000,
+    "p75": 16000,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "产品经理",
+    "category": "product",
+    "cityTier": "tier1",
+    "experienceLevel": "mid",
+    "p25": 16000,
+    "p50": 22000,
+    "p75": 28000,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "产品经理",
+    "category": "product",
+    "cityTier": "tier1",
+    "experienceLevel": "senior",
+    "p25": 28000,
+    "p50": 35000,
+    "p75": 45000,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "产品经理",
+    "category": "product",
+    "cityTier": "new_tier1",
+    "experienceLevel": "junior",
+    "p25": 8000,
+    "p50": 10500,
+    "p75": 13000,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "产品经理",
+    "category": "product",
+    "cityTier": "new_tier1",
+    "experienceLevel": "mid",
+    "p25": 13000,
+    "p50": 17500,
+    "p75": 22500,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "产品经理",
+    "category": "product",
+    "cityTier": "new_tier1",
+    "experienceLevel": "senior",
+    "p25": 22500,
+    "p50": 28000,
+    "p75": 36000,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "产品经理",
+    "category": "product",
+    "cityTier": "tier2",
+    "experienceLevel": "junior",
+    "p25": 6500,
+    "p50": 8500,
+    "p75": 10500,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "产品经理",
+    "category": "product",
+    "cityTier": "tier2",
+    "experienceLevel": "mid",
+    "p25": 10500,
+    "p50": 14500,
+    "p75": 18000,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "产品经理",
+    "category": "product",
+    "cityTier": "tier2",
+    "experienceLevel": "senior",
+    "p25": 18000,
+    "p50": 22500,
+    "p75": 29000,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "数据分析师",
+    "category": "data",
+    "cityTier": "tier1",
+    "experienceLevel": "junior",
+    "p25": 9000,
+    "p50": 12000,
+    "p75": 15000,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "数据分析师",
+    "category": "data",
+    "cityTier": "tier1",
+    "experienceLevel": "mid",
+    "p25": 15000,
+    "p50": 20000,
+    "p75": 25000,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "数据分析师",
+    "category": "data",
+    "cityTier": "tier1",
+    "experienceLevel": "senior",
+    "p25": 25000,
+    "p50": 32000,
+    "p75": 40000,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "数据分析师",
+    "category": "data",
+    "cityTier": "new_tier1",
+    "experienceLevel": "junior",
+    "p25": 7000,
+    "p50": 9500,
+    "p75": 12000,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "数据分析师",
+    "category": "data",
+    "cityTier": "new_tier1",
+    "experienceLevel": "mid",
+    "p25": 12000,
+    "p50": 16000,
+    "p75": 20000,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "数据分析师",
+    "category": "data",
+    "cityTier": "new_tier1",
+    "experienceLevel": "senior",
+    "p25": 20000,
+    "p50": 25500,
+    "p75": 32000,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "数据分析师",
+    "category": "data",
+    "cityTier": "tier2",
+    "experienceLevel": "junior",
+    "p25": 6000,
+    "p50": 8000,
+    "p75": 10000,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "数据分析师",
+    "category": "data",
+    "cityTier": "tier2",
+    "experienceLevel": "mid",
+    "p25": 10000,
+    "p50": 13000,
+    "p75": 16000,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "数据分析师",
+    "category": "data",
+    "cityTier": "tier2",
+    "experienceLevel": "senior",
+    "p25": 16000,
+    "p50": 20500,
+    "p75": 26000,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "UI设计师",
+    "category": "design",
+    "cityTier": "tier1",
+    "experienceLevel": "junior",
+    "p25": 8000,
+    "p50": 10000,
+    "p75": 13000,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "UI设计师",
+    "category": "design",
+    "cityTier": "tier1",
+    "experienceLevel": "mid",
+    "p25": 13000,
+    "p50": 17000,
+    "p75": 21000,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "UI设计师",
+    "category": "design",
+    "cityTier": "tier1",
+    "experienceLevel": "senior",
+    "p25": 21000,
+    "p50": 26000,
+    "p75": 33000,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "UI设计师",
+    "category": "design",
+    "cityTier": "new_tier1",
+    "experienceLevel": "junior",
+    "p25": 6500,
+    "p50": 8000,
+    "p75": 10500,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "UI设计师",
+    "category": "design",
+    "cityTier": "new_tier1",
+    "experienceLevel": "mid",
+    "p25": 10500,
+    "p50": 13500,
+    "p75": 17000,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "UI设计师",
+    "category": "design",
+    "cityTier": "new_tier1",
+    "experienceLevel": "senior",
+    "p25": 17000,
+    "p50": 21000,
+    "p75": 26500,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "UI设计师",
+    "category": "design",
+    "cityTier": "tier2",
+    "experienceLevel": "junior",
+    "p25": 5500,
+    "p50": 6500,
+    "p75": 8500,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "UI设计师",
+    "category": "design",
+    "cityTier": "tier2",
+    "experienceLevel": "mid",
+    "p25": 8500,
+    "p50": 11000,
+    "p75": 13500,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "UI设计师",
+    "category": "design",
+    "cityTier": "tier2",
+    "experienceLevel": "senior",
+    "p25": 13500,
+    "p50": 17000,
+    "p75": 21500,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "运营",
+    "category": "operation",
+    "cityTier": "tier1",
+    "experienceLevel": "junior",
+    "p25": 7000,
+    "p50": 9000,
+    "p75": 11000,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "运营",
+    "category": "operation",
+    "cityTier": "tier1",
+    "experienceLevel": "mid",
+    "p25": 11000,
+    "p50": 14000,
+    "p75": 18000,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "运营",
+    "category": "operation",
+    "cityTier": "tier1",
+    "experienceLevel": "senior",
+    "p25": 18000,
+    "p50": 23000,
+    "p75": 30000,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "运营",
+    "category": "operation",
+    "cityTier": "new_tier1",
+    "experienceLevel": "junior",
+    "p25": 5500,
+    "p50": 7000,
+    "p75": 9000,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "运营",
+    "category": "operation",
+    "cityTier": "new_tier1",
+    "experienceLevel": "mid",
+    "p25": 9000,
+    "p50": 11500,
+    "p75": 14500,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "运营",
+    "category": "operation",
+    "cityTier": "new_tier1",
+    "experienceLevel": "senior",
+    "p25": 14500,
+    "p50": 18500,
+    "p75": 24000,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "运营",
+    "category": "operation",
+    "cityTier": "tier2",
+    "experienceLevel": "junior",
+    "p25": 4500,
+    "p50": 6000,
+    "p75": 7500,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "运营",
+    "category": "operation",
+    "cityTier": "tier2",
+    "experienceLevel": "mid",
+    "p25": 7500,
+    "p50": 9000,
+    "p75": 11500,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "运营",
+    "category": "operation",
+    "cityTier": "tier2",
+    "experienceLevel": "senior",
+    "p25": 11500,
+    "p50": 15000,
+    "p75": 19500,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "移动端开发",
+    "category": "frontend",
+    "cityTier": "tier1",
+    "experienceLevel": "junior",
+    "p25": 11000,
+    "p50": 14000,
+    "p75": 17000,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "移动端开发",
+    "category": "frontend",
+    "cityTier": "tier1",
+    "experienceLevel": "mid",
+    "p25": 17000,
+    "p50": 23000,
+    "p75": 28000,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "移动端开发",
+    "category": "frontend",
+    "cityTier": "tier1",
+    "experienceLevel": "senior",
+    "p25": 28000,
+    "p50": 35000,
+    "p75": 45000,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "移动端开发",
+    "category": "frontend",
+    "cityTier": "new_tier1",
+    "experienceLevel": "junior",
+    "p25": 9000,
+    "p50": 11000,
+    "p75": 13500,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "移动端开发",
+    "category": "frontend",
+    "cityTier": "new_tier1",
+    "experienceLevel": "mid",
+    "p25": 13500,
+    "p50": 18500,
+    "p75": 22500,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "移动端开发",
+    "category": "frontend",
+    "cityTier": "new_tier1",
+    "experienceLevel": "senior",
+    "p25": 22500,
+    "p50": 28000,
+    "p75": 36000,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "移动端开发",
+    "category": "frontend",
+    "cityTier": "tier2",
+    "experienceLevel": "junior",
+    "p25": 7000,
+    "p50": 9000,
+    "p75": 11000,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "移动端开发",
+    "category": "frontend",
+    "cityTier": "tier2",
+    "experienceLevel": "mid",
+    "p25": 11000,
+    "p50": 15000,
+    "p75": 18000,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "移动端开发",
+    "category": "frontend",
+    "cityTier": "tier2",
+    "experienceLevel": "senior",
+    "p25": 18000,
+    "p50": 22500,
+    "p75": 29000,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "Agent开发工程师",
+    "category": "agent",
+    "cityTier": "tier1",
+    "experienceLevel": "junior",
+    "p25": 18000,
+    "p50": 25000,
+    "p75": 35000,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "Agent开发工程师",
+    "category": "agent",
+    "cityTier": "tier1",
+    "experienceLevel": "mid",
+    "p25": 30000,
+    "p50": 40000,
+    "p75": 55000,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "Agent开发工程师",
+    "category": "agent",
+    "cityTier": "tier1",
+    "experienceLevel": "senior",
+    "p25": 50000,
+    "p50": 70000,
+    "p75": 90000,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "Agent开发工程师",
+    "category": "agent",
+    "cityTier": "new_tier1",
+    "experienceLevel": "junior",
+    "p25": 14000,
+    "p50": 20000,
+    "p75": 28000,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "Agent开发工程师",
+    "category": "agent",
+    "cityTier": "new_tier1",
+    "experienceLevel": "mid",
+    "p25": 24000,
+    "p50": 32000,
+    "p75": 44000,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "Agent开发工程师",
+    "category": "agent",
+    "cityTier": "new_tier1",
+    "experienceLevel": "senior",
+    "p25": 40000,
+    "p50": 56000,
+    "p75": 72000,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "Agent开发工程师",
+    "category": "agent",
+    "cityTier": "tier2",
+    "experienceLevel": "junior",
+    "p25": 12000,
+    "p50": 16000,
+    "p75": 22000,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "Agent开发工程师",
+    "category": "agent",
+    "cityTier": "tier2",
+    "experienceLevel": "mid",
+    "p25": 20000,
+    "p50": 26000,
+    "p75": 35000,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "Agent开发工程师",
+    "category": "agent",
+    "cityTier": "tier2",
+    "experienceLevel": "senior",
+    "p25": 32000,
+    "p50": 42000,
+    "p75": 55000,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "运维工程师",
+    "category": "devops",
+    "cityTier": "tier1",
+    "experienceLevel": "junior",
+    "p25": 11000,
+    "p50": 14000,
+    "p75": 17000,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "运维工程师",
+    "category": "devops",
+    "cityTier": "tier1",
+    "experienceLevel": "mid",
+    "p25": 17000,
+    "p50": 22000,
+    "p75": 28000,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "运维工程师",
+    "category": "devops",
+    "cityTier": "tier1",
+    "experienceLevel": "senior",
+    "p25": 28000,
+    "p50": 35000,
+    "p75": 45000,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "运维工程师",
+    "category": "devops",
+    "cityTier": "new_tier1",
+    "experienceLevel": "junior",
+    "p25": 9000,
+    "p50": 11000,
+    "p75": 13500,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "运维工程师",
+    "category": "devops",
+    "cityTier": "new_tier1",
+    "experienceLevel": "mid",
+    "p25": 13500,
+    "p50": 17500,
+    "p75": 22000,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "运维工程师",
+    "category": "devops",
+    "cityTier": "new_tier1",
+    "experienceLevel": "senior",
+    "p25": 22000,
+    "p50": 28000,
+    "p75": 36000,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "运维工程师",
+    "category": "devops",
+    "cityTier": "tier2",
+    "experienceLevel": "junior",
+    "p25": 7000,
+    "p50": 9000,
+    "p75": 11000,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "运维工程师",
+    "category": "devops",
+    "cityTier": "tier2",
+    "experienceLevel": "mid",
+    "p25": 11000,
+    "p50": 14000,
+    "p75": 17500,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "运维工程师",
+    "category": "devops",
+    "cityTier": "tier2",
+    "experienceLevel": "senior",
+    "p25": 17500,
+    "p50": 22500,
+    "p75": 29000,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "区块链开发",
+    "category": "web3",
+    "cityTier": "tier1",
+    "experienceLevel": "junior",
+    "p25": 18000,
+    "p50": 25000,
+    "p75": 32000,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "区块链开发",
+    "category": "web3",
+    "cityTier": "tier1",
+    "experienceLevel": "mid",
+    "p25": 28000,
+    "p50": 38000,
+    "p75": 50000,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "区块链开发",
+    "category": "web3",
+    "cityTier": "tier1",
+    "experienceLevel": "senior",
+    "p25": 45000,
+    "p50": 60000,
+    "p75": 80000,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "区块链开发",
+    "category": "web3",
+    "cityTier": "new_tier1",
+    "experienceLevel": "junior",
+    "p25": 14000,
+    "p50": 20000,
+    "p75": 26000,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "区块链开发",
+    "category": "web3",
+    "cityTier": "new_tier1",
+    "experienceLevel": "mid",
+    "p25": 22000,
+    "p50": 30000,
+    "p75": 40000,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "区块链开发",
+    "category": "web3",
+    "cityTier": "new_tier1",
+    "experienceLevel": "senior",
+    "p25": 36000,
+    "p50": 48000,
+    "p75": 64000,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "区块链开发",
+    "category": "web3",
+    "cityTier": "tier2",
+    "experienceLevel": "junior",
+    "p25": 12000,
+    "p50": 16000,
+    "p75": 21000,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "区块链开发",
+    "category": "web3",
+    "cityTier": "tier2",
+    "experienceLevel": "mid",
+    "p25": 19000,
+    "p50": 25000,
+    "p75": 32000,
+    "dataSource": "公开市场参考(2025)"
+  },
+  {
+    "position": "区块链开发",
+    "category": "web3",
+    "cityTier": "tier2",
+    "experienceLevel": "senior",
+    "p25": 30000,
+    "p50": 40000,
+    "p75": 52000,
+    "dataSource": "公开市场参考(2025)"
+  }
+]

@@ -1,0 +1,32 @@
+# 面试教练(单机版)配置示例
+# 首次运行会自动生成 config.toml,直接编辑该文件即可;环境变量优先级更高。
+
+[server]
+# 默认只监听本机,其他设备访问不到,更安全;想局域网访问可改 0.0.0.0
+host = "127.0.0.1"
+port = 8080
+# 启动后自动打开浏览器
+auto_open_browser = true
+# 本地数据目录(全部数据放在该目录的 interview-coach.json 里)
+data_dir = "data"
+
+[llm]
+# 任何 OpenAI 兼容接口都可以
+# DeepSeek: https://api.deepseek.com          模型 deepseek-chat
+# 通义千问: https://dashscope.aliyuncs.com/compatible-mode   模型 qwen-plus
+# Ollama:   http://localhost:11434/v1         模型 qwen2.5:7b
+base_url = "https://api.deepseek.com"
+api_key = ""
+model = "deepseek-chat"
+temperature = 0.7
+max_tokens = 2000
+# 单次大模型请求超时(秒)
+timeout_seconds = 90
+
+[interview]
+# 每场面试的题目数量
+total_questions = 11
+default_position_category = "backend"
+default_difficulty = "normal"
+default_style = "friendly"
+default_mode = "normal"
